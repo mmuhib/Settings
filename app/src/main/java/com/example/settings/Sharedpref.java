@@ -24,16 +24,41 @@ public class Sharedpref {
     public void commit() {
         editor.commit();
     }
+    public void setSaveName(String saveName){
+        editor.putString("savename",saveName);
+    }
+    public String getSaveName(){
+        return sharedPreferences.getString("savename","");
+    }
+    public void setPhoneNumbersList(String PhoneNumbersList){
+        editor.putString("PhoneNumbersList",PhoneNumbersList);
+    }
+    public String getPhoneNumbersList(){
+        return sharedPreferences.getString("PhoneNumbersList","");
+    }
     public void setOutgoingNumbers(String outgoingNumbers){
         editor.putString("outgoingnumbers",outgoingNumbers);
     }
     public String getOutgoingNumbers(){
         return sharedPreferences.getString("outgoingnumbers","");
     }
-    public void setIncomingNumbers(String inComingNumbers){
-        editor.putString("incomingnumbers",inComingNumbers);
+    public void setRecievedNumbers(String recievednumbers){
+        editor.putString("recievednumbers",recievednumbers);
     }
-    public String getIncomingNumbers(){
-        return sharedPreferences.getString("incomingnumbers","");
+    public String getRecievedNumbers(){
+        return sharedPreferences.getString("recievednumbers","");
+    }
+    public void setMissedCallNumber(String missedCallNumber){
+        editor.putString("missedCallNumber",missedCallNumber);
+    }
+    public String getMissedCallNumber(){
+        return sharedPreferences.getString("missedCallNumber","");
+    }
+
+    public void setSaveTextWritten(String saveTextWritten){
+        editor.putString("saveTextWritten",saveTextWritten);
+    }
+    public String getSaveTextWritten(){
+        return sharedPreferences.getString("saveTextWritten","");
     }
 }

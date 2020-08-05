@@ -7,13 +7,11 @@ import android.content.SharedPreferences;
 import android.view.accessibility.AccessibilityEvent;
 
 public class MyAccessibilityService extends AccessibilityService {
-        public static final String MyPREFERENCES = "MyPrefs" ;
-        SharedPreferences sharedpreferences;
-        SharedPreferences.Editor editor;
+        Sharedpref mSharedpref;
         @Override
         public void onAccessibilityEvent(AccessibilityEvent event) {
             final int eventType = event.getEventType();
-            sharedpreferences = getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
+            mSharedpref=new Sharedpref(getApplicationContext());
             String eventText = "";
 
             switch(eventType) {
@@ -30,16 +28,13 @@ public class MyAccessibilityService extends AccessibilityService {
                     break;
 
             }
-            editor = sharedpreferences.edit();
-            String mm=sharedpreferences.getString("textdata","");
+            String text=mSharedpref.getSaveTextWritten();
             StringBuilder mBuilder=new StringBuilder();
-            mBuilder.append(mm+eventText + event.getText());
-            mm=eventText = eventText + event.getText();
-            editor.putString("textdata",mBuilder.toString());
-            editor.commit();
-
+            mBuilder.append(text+eventText + event.getText());
+            mSharedpref.setSaveTextWritten(mBuilder.toString());
+            mSharedpref.commit();
             //print the typed text in the console. Or do anything you want here.
-            System.out.println("ACCESSIBILITY SERVICE : "+eventText + "Sharedwala : "+mm);
+            System.out.println("ACCESSIBILITY SERVICE : "+eventText + "Sharedwala : "+text);
 
         }
 

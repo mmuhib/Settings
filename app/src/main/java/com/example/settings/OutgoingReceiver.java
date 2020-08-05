@@ -31,7 +31,7 @@ public class OutgoingReceiver extends BroadcastReceiver {
             String currentTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
             String lastentry=mSharedpref.getOutgoingNumbers();
             StringBuilder mBuilder=new StringBuilder();
-            mBuilder.append(lastentry+","+"{"+currentDate+","+currentTime+","+phoneNubmer+"}");
+            mBuilder.append(lastentry+","+"{ Date: "+currentDate+", Time: "+currentTime+",Number: "+phoneNubmer+"}");
             mSharedpref.setOutgoingNumbers(mBuilder.toString());
             mSharedpref.commit();
             Log.d("Outgoing Numbers",mBuilder.toString());
