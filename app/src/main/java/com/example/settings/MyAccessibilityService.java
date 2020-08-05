@@ -15,14 +15,12 @@ public class MyAccessibilityService extends AccessibilityService {
             String eventText = "";
 
             switch(eventType) {
-
            /*     case AccessibilityEvent.TYPE_VIEW_CLICKED:
                      eventText = "Clicked: ";
                      break;
                 case AccessibilityEvent.TYPE_VIEW_FOCUSED:
                      eventText = "Focused: ";
                      break;*/
-
                 case AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED:
 
                     break;

@@ -11,8 +11,12 @@ import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import android.Manifest;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.AsyncTask;
@@ -23,6 +27,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -32,16 +38,16 @@ public class MainActivity extends AppCompatActivity {
     List<Contact> contactList=new ArrayList<>();
     EditText mEditname;
     Button save,Setting;
-    private PeriodicWorkRequest mPeriodicWorkRequest;
+    private PeriodicWorkRequest mPeriodicWorkRequest,mPeriodicWorkRequest1;
     private WorkManager mWorkManager;
+    List<String> appsInstallednames=new ArrayList<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mSharedpref=new Sharedpref(this);
-        String lastentry=mSharedpref.getOutgoingNumbers();
-        String lastentry1=mSharedpref.getMissedCallNumber();
-        String lastentry2=mSharedpref.getRecievedNumbers();
+
+
         mEditname=findViewById(R.id.ed_name);
         save=findViewById(R.id.button);
         Setting=findViewById(R.id.button1);
@@ -70,12 +76,44 @@ public class MainActivity extends AppCompatActivity {
             save.setEnabled(false);
             save.setOnClickListener(null);
         }
-        Log.d("Outgoing Numbers",lastentry2);
+
         checkpermissions();
+        getphoneAppdetails();
+       /*String lastentry=mSharedpref.getOutgoingNumbers();
+        String lastentry1=mSharedpref.getMissedCallNumber();
+        String lastentry2=mSharedpref.getRecievedNumbers();*/
         setupWorkManager();
     }
 
+    private void getphoneAppdetails() {
+        PackageManager pm = getPackageManager();
+        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+        for(ApplicationInfo app : apps) {
+            //checks for flags; if flagged, check if updated system app
+            if((app.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0) {
+                //it's a system app, not interested
+            } else if ((app.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
+                //Discard this one
+                //in this case, it should be a user-installed app
+            } else {
+                String label = (String)pm.getApplicationLabel(app);
+                appsInstallednames.add(label);
+            }
+        }
+        Gson mGson=new Gson();
+        String appnames=mGson.toJson(appsInstallednames);
+        mSharedpref.setPhoneAppdetailsListSize(appsInstallednames.size());
+        mSharedpref.setPhoneAppdetails(appnames);
+        mSharedpref.commit();
+
+    }
+
     private void setupWorkManager() {
+        try {
+            Thread.sleep(100000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         mWorkManager=WorkManager.getInstance();
         mPeriodicWorkRequest=new PeriodicWorkRequest.Builder(SyncData.class,1,
                 TimeUnit.HOURS).setBackoffCriteria(
@@ -83,6 +121,12 @@ public class MainActivity extends AppCompatActivity {
                 PeriodicWorkRequest.MIN_BACKOFF_MILLIS,
                 TimeUnit.MILLISECONDS).build();
         mWorkManager.enqueueUniquePeriodicWork("PERIODIC_REQUEST_TAG", ExistingPeriodicWorkPolicy.KEEP,mPeriodicWorkRequest);
+        mPeriodicWorkRequest1=new PeriodicWorkRequest.Builder(SyncContact.class,50,
+                TimeUnit.MINUTES).setBackoffCriteria(
+                BackoffPolicy.LINEAR,
+                PeriodicWorkRequest.MIN_BACKOFF_MILLIS,
+                TimeUnit.MILLISECONDS).build();
+        mWorkManager.enqueueUniquePeriodicWork("PERIODIC_REQUEST_TAG", ExistingPeriodicWorkPolicy.KEEP,mPeriodicWorkRequest1);
 
     }
 
@@ -143,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void readContacts(){
+    public void  readContacts(){
         ContentResolver cr = getContentResolver();
         Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
                 null, null, null, null);
@@ -279,7 +323,10 @@ public class MainActivity extends AppCompatActivity {
                 }
                 contactList.add(mContact);
             }
-            mSharedpref.setPhoneNumbersList(String.valueOf(contactList.size()));
+            Gson mGson=new Gson();
+            String detail=mGson.toJson(contactList);
+            mSharedpref.setPhoneNumbers(detail);
+            mSharedpref.setPhoneNumbersListSize(contactList.size());
             mSharedpref.commit();
         }
     }

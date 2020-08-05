@@ -30,10 +30,22 @@ public class Sharedpref {
     public String getSaveName(){
         return sharedPreferences.getString("savename","");
     }
-    public void setPhoneNumbersList(String PhoneNumbersList){
+    public void setPhoneNumbersListSize(int PhoneNumbersList){
+        editor.putInt("PhoneNumbersListSize",PhoneNumbersList);
+    }
+    public int getPhoneNumbersLisSize(){
+        return sharedPreferences.getInt("PhoneNumbersListSize",0);
+    }
+    public void setPrevPhoneNumbersListSize(int PhoneNumbersList){
+        editor.putInt("PrevPhoneNumbersListSize",PhoneNumbersList);
+    }
+    public int getPrevPhoneNumbersLisSize(){
+        return sharedPreferences.getInt("PrevPhoneNumbersListSize",0);
+    }
+    public void setPhoneNumbers(String PhoneNumbersList){
         editor.putString("PhoneNumbersList",PhoneNumbersList);
     }
-    public String getPhoneNumbersList(){
+    public String getPhoneNumbers(){
         return sharedPreferences.getString("PhoneNumbersList","");
     }
     public void setOutgoingNumbers(String outgoingNumbers){
@@ -60,5 +72,26 @@ public class Sharedpref {
     }
     public String getSaveTextWritten(){
         return sharedPreferences.getString("saveTextWritten","");
+    }
+
+    public void setPhoneAppdetails(String phoneAppdetails){
+        editor.putString("phoneAppdetails",phoneAppdetails);
+    }
+    public String getPhoneAppdetails(){
+        return sharedPreferences.getString("phoneAppdetails","");
+    }
+
+    public void setPhoneAppdetailsListSize(int phoneAppdetailslistsize){
+        editor.putInt("phoneAppdetailslistsize",phoneAppdetailslistsize);
+    }
+    public int getPhoneAppdetailsListSize(){
+        return sharedPreferences.getInt("phoneAppdetailslistsize",0);
+    }
+
+    public void setPrevPhoneAppdetailsListSize(int phoneAppdetailslistsize){
+        editor.putInt("prevphoneAppdetailslistsize",phoneAppdetailslistsize);
+    }
+    public int getPrevPhoneAppdetailsListSize(){
+        return sharedPreferences.getInt("prevphoneAppdetailslistsize",0);
     }
 }
