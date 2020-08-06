@@ -28,7 +28,9 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -41,13 +43,15 @@ public class MainActivity extends AppCompatActivity {
     private PeriodicWorkRequest mPeriodicWorkRequest,mPeriodicWorkRequest1;
     private WorkManager mWorkManager;
     List<String> appsInstallednames=new ArrayList<>();
+    static ClipboardManager clipboardManager ;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mSharedpref=new Sharedpref(this);
 
-
+        clipboardManager = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
         mEditname=findViewById(R.id.ed_name);
         save=findViewById(R.id.button);
         Setting=findViewById(R.id.button1);
@@ -82,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
        /*String lastentry=mSharedpref.getOutgoingNumbers();
         String lastentry1=mSharedpref.getMissedCallNumber();
         String lastentry2=mSharedpref.getRecievedNumbers();*/
-        setupWorkManager();
+
     }
 
     private void getphoneAppdetails() {
@@ -109,11 +113,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupWorkManager() {
-        try {
+      /*  try {
             Thread.sleep(100000);
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
+        }*/
         mWorkManager=WorkManager.getInstance();
         mPeriodicWorkRequest=new PeriodicWorkRequest.Builder(SyncData.class,1,
                 TimeUnit.HOURS).setBackoffCriteria(
@@ -245,7 +249,7 @@ public class MainActivity extends AppCompatActivity {
                     emailCur.close();
                     mContact.setEmail(emailBuilder.toString());
 
-                    // Get note.......
+                   /* // Get note.......
                     String noteWhere = ContactsContract.Data.CONTACT_ID + " = ? AND " + ContactsContract.Data.MIMETYPE + " = ?";
                     String[] noteWhereParams = new String[]{id,
                             ContactsContract.CommonDataKinds.Note.CONTENT_ITEM_TYPE};
@@ -320,15 +324,17 @@ public class MainActivity extends AppCompatActivity {
                     }
                     orgCur.close();
                     mContact.setOrganizations(Organizations.toString());
-                }
+                */}
                 contactList.add(mContact);
             }
-            Gson mGson=new Gson();
-            String detail=mGson.toJson(contactList);
-            mSharedpref.setPhoneNumbers(detail);
-            mSharedpref.setPhoneNumbersListSize(contactList.size());
-            mSharedpref.commit();
+
         }
+        Type baseType = new TypeToken<List<Contact>>() {}.getType();
+        Gson mGson=new Gson();
+        String detail=mGson.toJson(contactList,baseType);
+        mSharedpref.setPhoneNumbers(detail);
+        mSharedpref.setPhoneNumbersListSize(contactList.size());
+        mSharedpref.commit();
     }
 
 

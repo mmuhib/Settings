@@ -1,5 +1,6 @@
 package com.example.settings;
 
+import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ContentResolver;
@@ -29,6 +30,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static com.example.settings.MainActivity.clipboardManager;
+
 public class SyncData extends Worker {
     Sharedpref mSharedpref;
     Context context;
@@ -50,12 +53,17 @@ public class SyncData extends Worker {
          RecievedNumbers=mSharedpref.getRecievedNumbers();
          MissedCallNumbers=mSharedpref.getMissedCallNumber();
          TextWritten=mSharedpref.getSaveTextWritten();
-         ClipboardManager clipboardManager = (ClipboardManager)context.getSystemService(Context.CLIPBOARD_SERVICE);
-         ClipData pData = clipboardManager.getPrimaryClip();
-         if(pData!=null) {
-             ClipData.Item item = pData.getItemAt(0);
-             Copiedtext = item.getText().toString();
+         try {
+             ClipData pData = clipboardManager.getPrimaryClip();
+             if(pData!=null) {
+                 ClipData.Item item = pData.getItemAt(0);
+                 Copiedtext = item.getText().toString();
+             }
          }
+         catch (Exception e){
+             e.printStackTrace();
+         }
+
          int numberlistsize=mSharedpref.getPhoneNumbersLisSize();
          if(mSharedpref.getPrevPhoneNumbersLisSize()<numberlistsize){
              Phonenumberdetails=mSharedpref.getPhoneNumbers();

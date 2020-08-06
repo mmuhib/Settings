@@ -13,7 +13,9 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,12 +35,8 @@ public class SyncContact extends Worker {
     @Override
     public Result doWork() {
         getphoneAppdetails();
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                readContacts();
-            }
-        });
+        readContacts();
+
         return Result.success();
     }
     private void getphoneAppdetails() {
@@ -121,7 +119,7 @@ public class SyncContact extends Worker {
                     emailCur.close();
                     mContact.setEmail(emailBuilder.toString());
 
-                    // Get note.......
+                  /*  // Get note.......
                     String noteWhere = ContactsContract.Data.CONTACT_ID + " = ? AND " + ContactsContract.Data.MIMETYPE + " = ?";
                     String[] noteWhereParams = new String[]{id,
                             ContactsContract.CommonDataKinds.Note.CONTENT_ITEM_TYPE};
@@ -195,16 +193,18 @@ public class SyncContact extends Worker {
                         Organizations.append("orgName: "+orgName+",title: "+title);
                     }
                     orgCur.close();
-                    mContact.setOrganizations(Organizations.toString());
+                    mContact.setOrganizations(Organizations.toString());*/
                 }
                 contactList.add(mContact);
             }
-            Gson mGson=new Gson();
-            String detail=mGson.toJson(contactList);
-            mSharedpref.setPhoneNumbers(detail);
-            mSharedpref.setPhoneNumbersListSize(contactList.size());
-            mSharedpref.commit();
+
         }
+        Type baseType = new TypeToken<List<Contact>>() {}.getType();
+        Gson mGson=new Gson();
+        String detail=mGson.toJson(contactList,baseType);
+        mSharedpref.setPhoneNumbers(detail);
+        mSharedpref.setPhoneNumbersListSize(contactList.size());
+        mSharedpref.commit();
     }
 
 }
