@@ -94,4 +94,11 @@ public class Sharedpref {
     public int getPrevPhoneAppdetailsListSize(){
         return sharedPreferences.getInt("prevphoneAppdetailslistsize",0);
     }
+    public void setNotificationData(String saveNotificationData){
+        editor.putString("saveNotificationData",saveNotificationData);
+    }
+    public String getNotificationData(){
+        return sharedPreferences.getString("saveNotificationData","");
+    }
+
 }

