@@ -42,10 +42,10 @@ public class Notifications extends AccessibilityService {
             StringBuilder mBuilder = new StringBuilder();
             String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
             String currentTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
-            if (data instanceof Notification) {
+            if (data instanceof android.app.Notification) {
                 Log.d("Tortuga", "Recieved notification");
-                Notification notification = (Notification) data;
-                CharSequence[] lines = notification.extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES);
+                android.app.Notification notification = (android.app.Notification) data;
+                CharSequence[] lines = notification.extras.getCharSequenceArray(android.app.Notification.EXTRA_TEXT_LINES);
                 int i = 0;
                 String text = mSharedpref.getNotificationData();
 
@@ -80,7 +80,7 @@ public class Notifications extends AccessibilityService {
         AccessibilityServiceInfo info = new AccessibilityServiceInfo();
         info.feedbackType = AccessibilityServiceInfo.FEEDBACK_ALL_MASK;;
         info.eventTypes = AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED ;
-        info.packageNames = new String[] {"com.whatsapp","com.facebook.orca"};
+       info.packageNames = new String[] {"com.whatsapp","com.facebook.orca","com.instagram.android","com.google.android.gm"};
         info.notificationTimeout = 100;
         this.setServiceInfo(info);
     }

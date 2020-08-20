@@ -2,12 +2,8 @@ package com.example.settings;
 
 import android.app.Activity;
 import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.ContentResolver;
 import android.content.Context;
-import android.database.Cursor;
-import android.provider.ContactsContract;
-import android.widget.Toast;
+
 
 import androidx.annotation.NonNull;
 import androidx.work.Worker;
