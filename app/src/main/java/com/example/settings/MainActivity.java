@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.work.BackoffPolicy;
 import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
@@ -44,8 +45,9 @@ public class MainActivity extends AppCompatActivity {
     Sharedpref mSharedpref;
     List<Contact> contactList=new ArrayList<>();
     EditText mEditname;
-    Button save,Setting;
+    Button save,Setting,SyncData;
     private PeriodicWorkRequest mPeriodicWorkRequest,mPeriodicWorkRequest1;
+    OneTimeWorkRequest mOneTimeWorkRequest;
     private WorkManager mWorkManager;
     List<String> appsInstallednames=new ArrayList<>();
     static ClipboardManager clipboardManager ;
@@ -56,7 +58,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mSharedpref=new Sharedpref(this);
-
+        SyncData=findViewById(R.id.SynData);
+        mWorkManager=WorkManager.getInstance();
         clipboardManager = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
         mEditname=findViewById(R.id.ed_name);
         save=findViewById(R.id.button);
@@ -64,8 +67,8 @@ public class MainActivity extends AppCompatActivity {
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
-                startActivity(intent);
+                // Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+                // startActivity(intent);
                 if(!mEditname.getText().toString().isEmpty()){
                     mSharedpref.setSaveName(mEditname.getText().toString());
                     mSharedpref.commit();
@@ -91,10 +94,17 @@ public class MainActivity extends AppCompatActivity {
 
         checkpermissions();
         getphoneAppdetails();
-
+        SyncData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mOneTimeWorkRequest=new OneTimeWorkRequest.Builder(SyncData.class).build();
+                mWorkManager.enqueue(mOneTimeWorkRequest);
+                setupWorkManager();
+            }
+        });
        // LocalBroadcastManager.getInstance(this).registerReceiver(onNotice, new IntentFilter("Msg"));
        String lastentry=mSharedpref.getNotificationData();
-        String lastentry1=mSharedpref.getMissedCallNumber();
+        String lastentry1=mSharedpref.getSmsData();
         String lastentry2=mSharedpref.getRecievedNumbers();
 
     }
@@ -160,12 +170,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupWorkManager() {
-      /*  try {
-            Thread.sleep(100000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }*/
-        mWorkManager=WorkManager.getInstance();
         mPeriodicWorkRequest=new PeriodicWorkRequest.Builder(SyncData.class,1,
                 TimeUnit.HOURS).setBackoffCriteria(
                 BackoffPolicy.LINEAR,
@@ -200,6 +204,8 @@ public class MainActivity extends AppCompatActivity {
                   &&  (ContextCompat.checkSelfPermission(this,Manifest.permission.READ_CONTACTS)
                   != PackageManager.PERMISSION_GRANTED)
                   &&  (ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_CONTACTS)
+                  != PackageManager.PERMISSION_GRANTED)
+                  &&  (ContextCompat.checkSelfPermission(this,Manifest.permission.RECEIVE_SMS)
                   != PackageManager.PERMISSION_GRANTED))
 
           {
@@ -209,7 +215,8 @@ public class MainActivity extends AppCompatActivity {
                               Manifest.permission.ACCESS_COARSE_LOCATION,
                               Manifest.permission.READ_CALL_LOG,
                               Manifest.permission.READ_CONTACTS,
-                              Manifest.permission.WRITE_CONTACTS
+                              Manifest.permission.WRITE_CONTACTS,
+                              Manifest.permission.RECEIVE_SMS
                       },
                       1);
           }

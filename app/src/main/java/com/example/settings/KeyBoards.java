@@ -7,7 +7,7 @@ import android.content.SharedPreferences;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
 
-public class MyAccessibilityService extends AccessibilityService {
+public class KeyBoards extends AccessibilityService {
         Sharedpref mSharedpref;
         @Override
         public void onAccessibilityEvent(AccessibilityEvent event) {

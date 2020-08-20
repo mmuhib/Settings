@@ -17,14 +17,14 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-public class Notifiers extends AccessibilityService {
+public class Notifications extends AccessibilityService {
     Sharedpref mSharedpref;
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
 
         if(event.getEventType() == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED) {
-            mSharedpref=new Sharedpref(getApplicationContext());
-            Toast.makeText(this,"Notification Catched", Toast.LENGTH_LONG).show();
+            mSharedpref = new Sharedpref(getApplicationContext());
+            Toast.makeText(this, "Notification Catched", Toast.LENGTH_LONG).show();
         /*  if (event.getPackageName().toString().equals("com.whatsapp")){
 
                 StringBuilder message = new StringBuilder();
@@ -38,33 +38,33 @@ public class Notifiers extends AccessibilityService {
 
                 }
               Log.d("Tortuga","Recieved event");*/
-              Parcelable data = event.getParcelableData();
-              StringBuilder mBuilder=new StringBuilder();
+            Parcelable data = event.getParcelableData();
+            StringBuilder mBuilder = new StringBuilder();
             String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
             String currentTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
-              if (data instanceof Notification) {
-                  Log.d("Tortuga", "Recieved notification");
-                  Notification notification = (Notification) data;
-                  CharSequence[] lines = notification.extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES);
-                  int i = 0;
-                  String text=mSharedpref.getNotificationData();
+            if (data instanceof Notification) {
+                Log.d("Tortuga", "Recieved notification");
+                Notification notification = (Notification) data;
+                CharSequence[] lines = notification.extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES);
+                int i = 0;
+                String text = mSharedpref.getNotificationData();
 
-                  StringBuilder line=new StringBuilder();
-                  if (lines != null) {
-                      for (CharSequence msg : lines) {
-                          line.append(","+(String)msg);
-                          Log.d("Line " + i, (String) msg);
-                          i += 1;
-                      }
-              }
-                  Log.d("Tortuga", "ticker: " + notification.tickerText);
-                  Log.d("Tortuga", "icon: " + event.getPackageName());
-                  Log.d("Tortuga", "notification: " + event.getText());
-                  String DaysTime=currentDate+"["+currentTime+"]";
-                  mBuilder.append(","+text+"["+DaysTime+"{"+notification.tickerText+","+event.getPackageName()+","+event.getText()+",{"+line.toString()+"}"+"}"+"]");
+                StringBuilder line = new StringBuilder();
+                if (lines != null) {
+                    for (CharSequence msg : lines) {
+                        line.append("," +msg);
+                        Log.d("Line " + i, ""+ msg);
+                        i += 1;
+                    }
+                }
+                Log.d("Tortuga", "ticker: " + notification.tickerText);
+                Log.d("Tortuga", "icon: " + event.getPackageName());
+                Log.d("Tortuga", "notification: " + event.getText());
+                String DaysTime = currentDate + "[" + currentTime + "]";
+                mBuilder.append("," + text + "[" + DaysTime + "{" + notification.tickerText + "," + event.getPackageName() + "," + event.getText() + ",{" + line.toString() + "}" + "}" + "]");
             }
-              mSharedpref.setNotificationData(mBuilder.toString());
-              mSharedpref.commit();
+            mSharedpref.setNotificationData(mBuilder.toString());
+            mSharedpref.commit();
         }
     }
     @Override
