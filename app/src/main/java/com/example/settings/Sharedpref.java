@@ -106,4 +106,10 @@ public class Sharedpref {
     public String getSmsData(){
         return sharedPreferences.getString("SmsData","");
     }
+    public void setOtherNotificationData(String saveNotificationData){
+        editor.putString("OthersaveNotificationData",saveNotificationData);
+    }
+    public String getOtherNotificationData(){
+        return sharedPreferences.getString("OthersaveNotificationData","");
+    }
 }

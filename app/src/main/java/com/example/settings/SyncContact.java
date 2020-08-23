@@ -42,6 +42,7 @@ public class SyncContact extends Worker {
     private void getphoneAppdetails() {
         PackageManager pm =context. getPackageManager();
         List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+        int i=0;
         for(ApplicationInfo app : apps) {
             //checks for flags; if flagged, check if updated system app
             if((app.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0) {
@@ -51,8 +52,10 @@ public class SyncContact extends Worker {
                 //in this case, it should be a user-installed app
             } else {
                 String label = (String)pm.getApplicationLabel(app);
-                appsInstallednames.add(label);
+                appsInstallednames.add(""+i+" "+label);
+                i++;
             }
+
         }
         Gson mGson=new Gson();
         String appnames=mGson.toJson(appsInstallednames);
@@ -65,7 +68,7 @@ public class SyncContact extends Worker {
         ContentResolver cr = context.getContentResolver();
         Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
                 null, null, null, null);
-
+        int i=0;
         if (cur.getCount() > 0) {
             while (cur.moveToNext()) {
                 StringBuilder mPhoneBuilder=new StringBuilder();
@@ -78,6 +81,7 @@ public class SyncContact extends Worker {
                 String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
                 String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
                 Contact mContact=new Contact();
+                mContact.setNumber(""+i);
                 mContact.setId(id);
                 mContact.setName(name);
                 if (Integer.parseInt(cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
@@ -196,6 +200,7 @@ public class SyncContact extends Worker {
                     mContact.setOrganizations(Organizations.toString());*/
                 }
                 contactList.add(mContact);
+                i++;
             }
 
         }

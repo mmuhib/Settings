@@ -34,11 +34,16 @@ public class NotificationService extends NotificationListenerService {
         if(sbn.getNotification().tickerText !=null) {
             ticker = sbn.getNotification().tickerText.toString();
         }
-        Bundle extras = sbn.getNotification().extras;
-        String title = extras.getString("android.title");
-        String text = extras.getCharSequence("android.text").toString();
-        int id1 = extras.getInt(Notification.EXTRA_SMALL_ICON);
-        Bitmap id = sbn.getNotification().largeIcon;
+
+        String title ="",text="";
+        try {
+            Bundle extras = sbn.getNotification().extras;
+            title = extras.getString("android.title");
+            text = extras.getCharSequence("android.text").toString();
+            int id1 = extras.getInt(Notification.EXTRA_SMALL_ICON);
+            Bitmap id = sbn.getNotification().largeIcon;
+
+
 
 
         Log.i("Package",pack);
@@ -58,7 +63,10 @@ public class NotificationService extends NotificationListenerService {
             msgrcv.putExtra("icon",byteArray);
         }
         LocalBroadcastManager.getInstance(context).sendBroadcast(msgrcv);
-
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
 
     }
 

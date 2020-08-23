@@ -1,6 +1,15 @@
 package com.example.settings;
 
 public class Contact {
+    public String getNumber() {
+        return number;
+    }
+
+    public void setNumber(String number) {
+        this.number = number;
+    }
+
+    String number;
     String id;
     String name;
     String phoneNumber;

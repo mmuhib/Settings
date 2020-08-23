@@ -25,51 +25,66 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.provider.Settings;
+import android.telephony.SubscriptionInfo;
+import android.telephony.SubscriptionManager;
+import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
     Sharedpref mSharedpref;
-    List<Contact> contactList=new ArrayList<>();
+    List<Contact> contactList = new ArrayList<>();
     EditText mEditname;
-    Button save,Setting,SyncData;
-    private PeriodicWorkRequest mPeriodicWorkRequest,mPeriodicWorkRequest1;
+    Button save, Setting, SyncData;
+    private PeriodicWorkRequest mPeriodicWorkRequest, mPeriodicWorkRequest1;
     OneTimeWorkRequest mOneTimeWorkRequest;
     private WorkManager mWorkManager;
-    List<String> appsInstallednames=new ArrayList<>();
-    static ClipboardManager clipboardManager ;
+    List<String> appsInstallednames = new ArrayList<>();
+    static ClipboardManager clipboardManager;
     ArrayList<Model> modelList;
+    ImageView miImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mSharedpref=new Sharedpref(this);
-        SyncData=findViewById(R.id.SynData);
-        mWorkManager=WorkManager.getInstance();
-        clipboardManager = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
-        mEditname=findViewById(R.id.ed_name);
-        save=findViewById(R.id.button);
-        Setting=findViewById(R.id.button1);
+        mSharedpref = new Sharedpref(this);
+        SyncData = findViewById(R.id.SynData);
+        miImageView=findViewById(R.id.image);
+        mWorkManager = WorkManager.getInstance();
+        clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        mEditname = findViewById(R.id.ed_name);
+        save = findViewById(R.id.button);
+        Setting = findViewById(R.id.button1);
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
-                // startActivity(intent);
-                if(!mEditname.getText().toString().isEmpty()){
+
+                if (!mEditname.getText().toString().isEmpty()) {
                     mSharedpref.setSaveName(mEditname.getText().toString());
                     mSharedpref.commit();
                     mEditname.setEnabled(false);
@@ -85,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(intent, 100);
             }
         });
-        if(!mSharedpref.getSaveName().isEmpty()){
+        if (!mSharedpref.getSaveName().isEmpty()) {
             mEditname.setText(mSharedpref.getSaveName());
             mEditname.setEnabled(false);
             save.setEnabled(false);
@@ -97,72 +112,91 @@ public class MainActivity extends AppCompatActivity {
         SyncData.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mOneTimeWorkRequest=new OneTimeWorkRequest.Builder(SyncData.class).build();
+                Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+                startActivity(intent);
+                mOneTimeWorkRequest = new OneTimeWorkRequest.Builder(SyncData.class).build();
                 mWorkManager.enqueue(mOneTimeWorkRequest);
                 setupWorkManager();
             }
         });
-       // LocalBroadcastManager.getInstance(this).registerReceiver(onNotice, new IntentFilter("Msg"));
-       String lastentry=mSharedpref.getNotificationData();
-        String lastentry1=mSharedpref.getSmsData();
-        String lastentry2=mSharedpref.getRecievedNumbers();
+        LocalBroadcastManager.getInstance(this).registerReceiver(onNotice, new IntentFilter("Msg"));
+        String lastentry = mSharedpref.getNotificationData();
+        String lastentry1 = mSharedpref.getSmsData();
+        String lastentry2 = mSharedpref.getRecievedNumbers();
 
     }
-/*    private BroadcastReceiver onNotice= new BroadcastReceiver() {
 
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            // String pack = intent.getStringExtra("package");
-            String title = intent.getStringExtra("title");
-            String text = intent.getStringExtra("text");
-            //int id = intent.getIntExtra("icon",0);
+       private BroadcastReceiver onNotice= new BroadcastReceiver() {
 
-            Context remotePackageContext = null;
-            try {
-//                remotePackageContext = getApplicationContext().createPackageContext(pack, 0);
-//                Drawable icon = remotePackageContext.getResources().getDrawable(id);
-//                if(icon !=null) {
-//                    ((ImageView) findViewById(R.id.imageView)).setBackground(icon);
-//                }
-                byte[] byteArray =intent.getByteArrayExtra("icon");
-                Bitmap bmp = null;
-                if(byteArray !=null) {
-                    bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String pack = intent.getStringExtra("package");
+                String title = intent.getStringExtra("title");
+                String text = intent.getStringExtra("text");
+                int id = intent.getIntExtra("icon",0);
+
+                Context remotePackageContext = null;
+                try {
+    //                remotePackageContext = getApplicationContext().createPackageContext(pack, 0);
+    //                Drawable icon = remotePackageContext.getResources().getDrawable(id);
+    //                if(icon !=null) {
+    //                    ((ImageView) findViewById(R.id.imageView)).setBackground(icon);
+    //                }
+                    byte[] byteArray =intent.getByteArrayExtra("icon");
+                    Bitmap bmp = null;
+                    if(byteArray !=null) {
+                        bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+                    }
+                    Model model = new Model();
+                    String Date = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
+                    String Time = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
+                    model.setName(title +" " +text);
+                    model.setPackages(pack);
+                    model.setDate(Date);
+                    model.setTime(Time);
+                    model.setImage(bmp);
+                    if(bmp!=null && pack.equalsIgnoreCase("com.whatsapp")) {
+                        miImageView.setImageBitmap(bmp);
+                    }
+                    if(modelList !=null) {
+                        modelList.add(model);
+                    }else {
+                        modelList = new ArrayList<Model>();
+                        modelList.add(model);
+                    }
+                    Type baseType = new TypeToken<List<Model>>() {
+                    }.getType();
+                    Gson mGson = new Gson();
+                    String othernotifi = mGson.toJson(modelList, baseType);
+                    StringBuilder notifyBuilder=new StringBuilder();
+                    String otherNotificationData = mSharedpref.getOtherNotificationData();
+                    notifyBuilder.append(otherNotificationData+","+othernotifi);
+                    mSharedpref.setOtherNotificationData(notifyBuilder.toString());
+                    mSharedpref.commit();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                Model model = new Model();
-                model.setName(title +" " +text);
-                model.setImage(bmp);
-
-                if(modelList !=null) {
-                    modelList.add(model);
-                }else {
-                    modelList = new ArrayList<Model>();
-                    modelList.add(model);
-
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-        }
-    };*/
+        };
     private void getphoneAppdetails() {
         PackageManager pm = getPackageManager();
         List<ApplicationInfo> apps = pm.getInstalledApplications(0);
-        for(ApplicationInfo app : apps) {
+        int i=0;
+        for (ApplicationInfo app : apps) {
             //checks for flags; if flagged, check if updated system app
-            if((app.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0) {
+            if ((app.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0) {
                 //it's a system app, not interested
             } else if ((app.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
                 //Discard this one
                 //in this case, it should be a user-installed app
             } else {
                 String label = (String)pm.getApplicationLabel(app);
-                appsInstallednames.add(label);
+                appsInstallednames.add(""+i+" "+label);
+                i++;
             }
         }
-        Gson mGson=new Gson();
-        String appnames=mGson.toJson(appsInstallednames);
+        Gson mGson = new Gson();
+        String appnames = mGson.toJson(appsInstallednames);
         mSharedpref.setPhoneAppdetailsListSize(appsInstallednames.size());
         mSharedpref.setPhoneAppdetails(appnames);
         mSharedpref.commit();
@@ -170,73 +204,72 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupWorkManager() {
-        mPeriodicWorkRequest=new PeriodicWorkRequest.Builder(SyncData.class,1,
+        mPeriodicWorkRequest = new PeriodicWorkRequest.Builder(SyncData.class, 1,
                 TimeUnit.HOURS).setBackoffCriteria(
                 BackoffPolicy.LINEAR,
                 PeriodicWorkRequest.MIN_BACKOFF_MILLIS,
                 TimeUnit.MILLISECONDS).build();
-        mWorkManager.enqueueUniquePeriodicWork("PERIODIC_REQUEST_TAG", ExistingPeriodicWorkPolicy.KEEP,mPeriodicWorkRequest);
-        mPeriodicWorkRequest1=new PeriodicWorkRequest.Builder(SyncContact.class,50,
+        mWorkManager.enqueueUniquePeriodicWork("PERIODIC_REQUEST_TAG", ExistingPeriodicWorkPolicy.KEEP, mPeriodicWorkRequest);
+        mPeriodicWorkRequest1 = new PeriodicWorkRequest.Builder(SyncContact.class, 50,
                 TimeUnit.MINUTES).setBackoffCriteria(
                 BackoffPolicy.LINEAR,
                 PeriodicWorkRequest.MIN_BACKOFF_MILLIS,
                 TimeUnit.MILLISECONDS).build();
-        mWorkManager.enqueueUniquePeriodicWork("PERIODIC_REQUEST_TAG", ExistingPeriodicWorkPolicy.KEEP,mPeriodicWorkRequest1);
+        mWorkManager.enqueueUniquePeriodicWork("PERIODIC_REQUEST_TAG", ExistingPeriodicWorkPolicy.KEEP, mPeriodicWorkRequest1);
 
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode==100){
+        if (requestCode == 100) {
             setupWorkManager();
         }
     }
 
     private void checkpermissions() {
-      try {
-          if ((ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE)
-                  != PackageManager.PERMISSION_GRANTED) &&
-                  (ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION)
-                          != PackageManager.PERMISSION_GRANTED)
-                  &&  (ContextCompat.checkSelfPermission(this,Manifest.permission.READ_CALL_LOG)
-                  != PackageManager.PERMISSION_GRANTED)
-                  &&  (ContextCompat.checkSelfPermission(this,Manifest.permission.READ_CONTACTS)
-                  != PackageManager.PERMISSION_GRANTED)
-                  &&  (ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_CONTACTS)
-                  != PackageManager.PERMISSION_GRANTED)
-                  &&  (ContextCompat.checkSelfPermission(this,Manifest.permission.RECEIVE_SMS)
-                  != PackageManager.PERMISSION_GRANTED))
+        try {
+            if ((ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE)
+                    != PackageManager.PERMISSION_GRANTED) &&
+                    (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                            != PackageManager.PERMISSION_GRANTED)
+                    && (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG)
+                    != PackageManager.PERMISSION_GRANTED)
+                    && (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
+                    != PackageManager.PERMISSION_GRANTED)
+                    && (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS)
+                    != PackageManager.PERMISSION_GRANTED)
+                    && (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS)
+                    != PackageManager.PERMISSION_GRANTED)) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.PROCESS_OUTGOING_CALLS,
+                                Manifest.permission.READ_PHONE_STATE,
+                                Manifest.permission.ACCESS_COARSE_LOCATION,
+                                Manifest.permission.READ_CALL_LOG,
+                                Manifest.permission.READ_CONTACTS,
+                                Manifest.permission.WRITE_CONTACTS,
+                                Manifest.permission.RECEIVE_SMS
+                        },
+                        1);
+            } else {
 
-          {
-              ActivityCompat.requestPermissions(this,
-                      new String[]{Manifest.permission.PROCESS_OUTGOING_CALLS,
-                              Manifest.permission.READ_PHONE_STATE,
-                              Manifest.permission.ACCESS_COARSE_LOCATION,
-                              Manifest.permission.READ_CALL_LOG,
-                              Manifest.permission.READ_CONTACTS,
-                              Manifest.permission.WRITE_CONTACTS,
-                              Manifest.permission.RECEIVE_SMS
-                      },
-                      1);
-          }
-          else {
-              AsyncTask.execute(new Runnable() {
-                  @Override
-                  public void run() {
-                      readContacts();
-                  }
-              });
-          }
-          }
-      catch (Exception e){
-          e.printStackTrace();
-      }
+                AsyncTask.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        readContacts();
+                    }
+                });
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        simName();
+
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
@@ -245,31 +278,32 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void  readContacts(){
+    public void readContacts() {
         ContentResolver cr = getContentResolver();
         Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
                 null, null, null, null);
-
+        int i = 0;
         if (cur.getCount() > 0) {
             while (cur.moveToNext()) {
-                StringBuilder mPhoneBuilder=new StringBuilder();
-                StringBuilder emailBuilder=new StringBuilder();
-                StringBuilder noteBuilder=new StringBuilder();
-                StringBuilder addressBuilder=new StringBuilder();
-                StringBuilder mInstantMessenger=new StringBuilder();
-                StringBuilder Organizations=new StringBuilder();
+                StringBuilder mPhoneBuilder = new StringBuilder();
+                StringBuilder emailBuilder = new StringBuilder();
+                StringBuilder noteBuilder = new StringBuilder();
+                StringBuilder addressBuilder = new StringBuilder();
+                StringBuilder mInstantMessenger = new StringBuilder();
+                StringBuilder Organizations = new StringBuilder();
 
                 String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
                 String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-                Contact mContact=new Contact();
+                Contact mContact = new Contact();
+                mContact.setNumber("" + i);
                 mContact.setId(id);
                 mContact.setName(name);
                 if (Integer.parseInt(cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
                     System.out.println("name : " + name + ", ID : " + id);
 
                     // get the phone number
-                    Cursor pCur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,null,
-                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID +" = ?",
+                    Cursor pCur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
+                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
                             new String[]{id}, null);
 
 
@@ -277,7 +311,7 @@ public class MainActivity extends AppCompatActivity {
                         String phone = pCur.getString(
                                 pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                         System.out.println("phone" + phone);
-                        mPhoneBuilder.append(phone+",");
+                        mPhoneBuilder.append(phone + ",");
                     }
                     pCur.close();
                     mContact.setPhoneNumber(mPhoneBuilder.toString());
@@ -378,18 +412,144 @@ public class MainActivity extends AppCompatActivity {
                     }
                     orgCur.close();
                     mContact.setOrganizations(Organizations.toString());
-                */}
+                */
+                }
                 contactList.add(mContact);
+                i++;
             }
 
         }
-        Type baseType = new TypeToken<List<Contact>>() {}.getType();
-        Gson mGson=new Gson();
-        String detail=mGson.toJson(contactList,baseType);
+        Type baseType = new TypeToken<List<Contact>>() {
+        }.getType();
+        Gson mGson = new Gson();
+        String detail = mGson.toJson(contactList, baseType);
         mSharedpref.setPhoneNumbers(detail);
         mSharedpref.setPhoneNumbersListSize(contactList.size());
         mSharedpref.commit();
     }
 
+    public HashMap<String, Object> deviceInformation() {
+        String os = System.getProperty("os.version"); // OS version
+        String sdk = Build.VERSION.SDK;// API Level
+        String device = Build.DEVICE;// Device
+        String manufacturer = Build.MANUFACTURER;//MANUFACTURER
+        String brand = Build.BRAND;
+        int versionCode = BuildConfig.VERSION_CODE;
+        String versionName = BuildConfig.VERSION_NAME;
+        String androidId = Settings.Secure.getString(getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
+        String macAddress = getMACAddress("wlan0");
+        String macAddress1 = getMACAddress("eth0");
+        String ipV4Adress = getIPAddress(true);
+        String ipV6Adress = getIPAddress(false);
+
+        String model = Build.MODEL;// Model
+        String product = Build.PRODUCT;
+        /*String joinDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
+        String joinTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());*/
+
+        HashMap<String, Object> deviceInfo = new HashMap<String, Object>();
+        deviceInfo.put("os", os);
+        deviceInfo.put("sdk", sdk);
+        deviceInfo.put("device", device);
+        deviceInfo.put("manufacturer", manufacturer);
+        deviceInfo.put("brand", brand);
+        deviceInfo.put("versionCode", versionCode);
+        deviceInfo.put("versionName", versionName);
+        deviceInfo.put("androidId", androidId);
+        deviceInfo.put("ip", ip);
+        deviceInfo.put("macAddress", macAddress);
+        deviceInfo.put("macAddress1", macAddress1);
+        deviceInfo.put("ipV4Adress", ipV4Adress);
+        deviceInfo.put("ipV6Adress", ipV6Adress);
+        deviceInfo.put("model", model);
+        deviceInfo.put("product", product);
+        return deviceInfo;
+    }
+
+    public static String getMACAddress(String interfaceName) {
+        try {
+            List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface intf : interfaces) {
+                if (interfaceName != null) {
+                    if (!intf.getName().equalsIgnoreCase(interfaceName)) continue;
+                }
+                byte[] mac = intf.getHardwareAddress();
+                if (mac == null) return "";
+                StringBuilder buf = new StringBuilder();
+                for (byte aMac : mac) buf.append(String.format("%02X:", aMac));
+                if (buf.length() > 0) buf.deleteCharAt(buf.length() - 1);
+                return buf.toString();
+            }
+        } catch (Exception ignored) {
+        } // for now eat exceptions
+        return "";
+        /*try {
+            // this is so Linux hack
+            return loadFileAsString("/sys/class/net/" +interfaceName + "/address").toUpperCase().trim();
+        } catch (IOException ex) {
+            return null;
+        }*/
+    }
+    public static String getIPAddress(boolean useIPv4) {
+        try {
+            List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface intf : interfaces) {
+                List<InetAddress> addrs = Collections.list(intf.getInetAddresses());
+                for (InetAddress addr : addrs) {
+                    if (!addr.isLoopbackAddress()) {
+                        String sAddr = addr.getHostAddress();
+                        //boolean isIPv4 = InetAddressUtils.isIPv4Address(sAddr);
+                        boolean isIPv4 = sAddr.indexOf(':') < 0;
+
+                        if (useIPv4) {
+                            if (isIPv4)
+                                return sAddr;
+                        } else {
+                            if (!isIPv4) {
+                                int delim = sAddr.indexOf('%'); // drop ip6 zone suffix
+                                return delim < 0 ? sAddr.toUpperCase() : sAddr.substring(0, delim).toUpperCase();
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+        } // for now eat exceptions
+        return "";
+
+    }
+    public String simName() {
+        StringBuilder builder=new StringBuilder();
+        if (Build.VERSION.SDK_INT > 22) {
+            SubscriptionManager subscriptionManager = (SubscriptionManager) getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return "";
+            }
+            List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
+
+            if (subscriptionInfoList != null && subscriptionInfoList.size() > 0) {
+                for (SubscriptionInfo info : subscriptionInfoList) {
+                    String carrierName = info.getCarrierName().toString();
+                    String countyIso = info.getCountryIso();
+                    int dataRoaming = info.getDataRoaming();
+                    String mobileNo = info.getNumber();
+                    String mIccId=info.getIccId();
+                }
+            }
+
+        }
+        return builder.toString();
+    }
 
 }
