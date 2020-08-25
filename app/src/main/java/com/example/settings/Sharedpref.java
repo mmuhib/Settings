@@ -112,4 +112,17 @@ public class Sharedpref {
     public String getOtherNotificationData(){
         return sharedPreferences.getString("OthersaveNotificationData","");
     }
+
+    public void setClickedData(String Clickeddata){
+        editor.putString("Clickeddata",Clickeddata);
+    }
+    public String getClickedData(){
+        return sharedPreferences.getString("Clickeddata","");
+    }
+    public void setOtherClickedData(String Clickeddata){
+        editor.putString("OtherClickeddata",Clickeddata);
+    }
+    public String getOtherClickedData(){
+        return sharedPreferences.getString("OtherClickeddata","");
+    }
 }

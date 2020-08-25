@@ -49,14 +49,15 @@
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
+
         </service>
-        <service
+        <!--<service
             android:name=".Notifications"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
-        </service>
+        </service>-->
         <receiver
             android:name=".OutgoingReceiver"
             android:enabled="true"

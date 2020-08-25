@@ -81,7 +81,7 @@ public class Notifications extends AccessibilityService {
         info.feedbackType = AccessibilityServiceInfo.FEEDBACK_ALL_MASK;;
         info.eventTypes = AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED ;
        info.packageNames = new String[] {"com.whatsapp","com.facebook.orca","com.instagram.android","com.google.android.gm"};
-        info.notificationTimeout = 100;
+       // info.notificationTimeout = 100;
         this.setServiceInfo(info);
     }
 }

