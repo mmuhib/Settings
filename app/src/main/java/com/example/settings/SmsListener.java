@@ -33,11 +33,10 @@ public class SmsListener extends BroadcastReceiver {
                         String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
                         String currentTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
                         String lastentry=mSharedpref.getSmsData();
-                        StringBuilder mBuilder=new StringBuilder();
-                        mBuilder.append(lastentry+","+"{ Date: "+currentDate+", Time: "+currentTime+",Number: "+msg_from+", Message Text: "+msgBody+"}");
-                        mSharedpref.setSmsData(mBuilder.toString());
+                        String mBuilder=lastentry+","+"{ Date: "+currentDate+", Time: "+currentTime+",Number: "+msg_from+", Message Text: "+msgBody+"}";
+                        mSharedpref.setSmsData(mBuilder);
                         mSharedpref.commit();
-                        Log.d("Outgoing Numbers",mBuilder.toString());
+                        Log.d("Outgoing Numbers",mBuilder);
                     }
                 }catch(Exception e){
 

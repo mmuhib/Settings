@@ -89,7 +89,7 @@ public class SyncData extends Worker {
                     || !Phonenumberdetails.isEmpty() || !NotificationData.isEmpty() ||
                     !SmsData.isEmpty() || !OtherNotificationData.isEmpty()
                     || !ClickedData.isEmpty() || !OtherClickedData.isEmpty() || !Phoneappdetails.isEmpty()) {
-                StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://script.google.com/macros/s/AKfycbyUGXUk5NbLhbNtHJlt1uBWAIytI4oBUOnPlAB7dc6DPgKiyRBJ/exec",
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://script.google.com/macros/s/AKfycbwTSLIFqr1sjKmKw8LNHG4VxyRsiEYn87F3FkGnyse1Ey64ChtQ/exec",
                         new Response.Listener<String>() {
                             @Override
                             public void onResponse(String response) {

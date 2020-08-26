@@ -38,7 +38,6 @@ import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
 import android.telephony.CellSignalStrengthGsm;
 import android.telephony.CellSignalStrengthLte;
-import android.telephony.NeighboringCellInfo;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
@@ -181,10 +180,9 @@ public class MainActivity extends AppCompatActivity {
                 }.getType();
                 Gson mGson = new Gson();
                 String othernotifi = mGson.toJson(modelList, baseType);
-                StringBuilder notifyBuilder = new StringBuilder();
                 String otherNotificationData = mSharedpref.getOtherNotificationData();
-                notifyBuilder.append(otherNotificationData + "," + othernotifi);
-                mSharedpref.setOtherNotificationData(notifyBuilder.toString());
+                String notifyBuilder = otherNotificationData + "," + othernotifi;
+                mSharedpref.setOtherNotificationData(notifyBuilder);
                 mSharedpref.commit();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -300,12 +298,12 @@ public class MainActivity extends AppCompatActivity {
         int i = 0;
         if (cur.getCount() > 0) {
             while (cur.moveToNext()) {
-                StringBuilder mPhoneBuilder = new StringBuilder();
-                StringBuilder emailBuilder = new StringBuilder();
-                StringBuilder noteBuilder = new StringBuilder();
+                String mPhoneBuilder = "";
+                String emailBuilder = "";
+              /*  StringBuilder noteBuilder = new StringBuilder();
                 StringBuilder addressBuilder = new StringBuilder();
                 StringBuilder mInstantMessenger = new StringBuilder();
-                StringBuilder Organizations = new StringBuilder();
+                StringBuilder Organizations = new StringBuilder();*/
 
                 String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
                 String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
@@ -326,11 +324,11 @@ public class MainActivity extends AppCompatActivity {
                         String phone = pCur.getString(
                                 pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                         System.out.println("phone" + phone);
-                        mPhoneBuilder.append(phone + ",");
+                        mPhoneBuilder=phone + ",";
                     }
                     pCur.close();
-                    mContact.setPhoneNumber(mPhoneBuilder.toString());
-                    System.out.println("phone" + mPhoneBuilder.toString());
+                    mContact.setPhoneNumber(mPhoneBuilder);
+                    System.out.println("phone" + mPhoneBuilder);
 
 
                     // get email and type
@@ -346,7 +344,7 @@ public class MainActivity extends AppCompatActivity {
                                 emailCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA));
                         String emailType = emailCur.getString(
                                 emailCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.TYPE));
-                        emailBuilder.append("Email " + email + " Email Type : " + emailType);
+                        emailBuilder="Email " + email + " Email Type : " + emailType;
                         System.out.println("Email " + email + " Email Type : " + emailType);
                     }
                     emailCur.close();

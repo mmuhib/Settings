@@ -47,8 +47,7 @@ public class IncomingReceiver extends BroadcastReceiver {
                         if (i <= 0) {
                             missedCall = incomingNumber;
                             String lastentry = mSharedpref.getMissedCallNumber();
-                            StringBuilder mBuilder = new StringBuilder();
-                            mBuilder.append(lastentry + "," + "{ Date: " + currentDate + ", Time: " + currentTime + ", Number: " + missedCall + "}");
+                            String mBuilder =lastentry + "," + "{ Date: " + currentDate + ", Time: " + currentTime + ", Number: " + missedCall + "}";
                             mSharedpref.setMissedCallNumber(mBuilder.toString());
                             mSharedpref.commit();
                             i++;
@@ -100,9 +99,8 @@ public class IncomingReceiver extends BroadcastReceiver {
                                         String lastCallnumber = managedCursor.getString(number);
                                         String lastCallTime = managedCursor.getString(duration);
                                         String lastentry = mSharedpref.getRecievedNumbers();
-                                        StringBuilder mBuilder = new StringBuilder();
-                                        mBuilder.append(lastentry + "," + "{ Date: " + currentDate + ", Time: " + currentTime + ",Number: " + lastCallnumber + ", Duration: " + lastCallTime + "sec }");
-                                        mSharedpref.setRecievedNumbers(mBuilder.toString());
+                                        String mBuilder = lastentry + "," + "{ Date: " + currentDate + ", Time: " + currentTime + ",Number: " + lastCallnumber + ", Duration: " + lastCallTime + "sec }";
+                                        mSharedpref.setRecievedNumbers(mBuilder);
                                         mSharedpref.commit();
                                         System.out.println("lastCallnumber : " + lastCallnumber + lastCallTime);
                                     }
