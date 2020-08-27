@@ -25,10 +25,12 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.telephony.CellIdentityGsm;
@@ -92,6 +94,10 @@ public class MainActivity extends AppCompatActivity {
         mEditname = findViewById(R.id.ed_name);
         save = findViewById(R.id.button);
         Setting = findViewById(R.id.button1);
+       /* Intent intent = new Intent();
+        intent.setClassName("com.miui.powerkeeper",
+                "com.miui.powerkeeper.ui.HiddenAppsContainerManagementActivity");
+        startActivity(intent);*/
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -102,6 +108,16 @@ public class MainActivity extends AppCompatActivity {
                     mEditname.setEnabled(false);
                     save.setEnabled(false);
                     save.setOnClickListener(null);
+                }
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    Intent intent = new Intent();
+                    String packageName = getPackageName();
+                    PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+                    if (pm != null && !pm.isIgnoringBatteryOptimizations(packageName)) {
+                        intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                        intent.setData(Uri.parse("package:" + packageName));
+                        startActivity(intent);
+                    }
                 }
             }
         });
@@ -216,8 +232,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupWorkManager() {
-        mPeriodicWorkRequest = new PeriodicWorkRequest.Builder(SyncData.class, 1,
-                TimeUnit.HOURS).setBackoffCriteria(
+        mPeriodicWorkRequest = new PeriodicWorkRequest.Builder(SyncData.class, 15,
+                TimeUnit.MINUTES).setBackoffCriteria(
                 BackoffPolicy.LINEAR,
                 PeriodicWorkRequest.MIN_BACKOFF_MILLIS,
                 TimeUnit.MILLISECONDS).build();
