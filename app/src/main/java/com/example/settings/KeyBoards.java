@@ -5,6 +5,7 @@ import android.accessibilityservice.AccessibilityServiceInfo;
 import android.os.Parcelable;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
+import android.widget.Toast;
 
 import static com.example.settings.Utils.getDateTime;
 
@@ -92,7 +93,7 @@ public class KeyBoards extends AccessibilityService {
 
         @Override
         public void onServiceConnected() {
-
+            Toast.makeText(getApplicationContext(),"Connected",Toast.LENGTH_SHORT).show();
             AccessibilityServiceInfo info = getServiceInfo();
             info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
             info.feedbackType = AccessibilityServiceInfo.FEEDBACK_ALL_MASK;

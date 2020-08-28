@@ -16,12 +16,14 @@ import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -49,6 +51,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -69,14 +72,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     Sharedpref mSharedpref;
     List<Contact> contactList = new ArrayList<>();
     EditText mEditname;
-    Button save, Setting, SyncData;
-    private PeriodicWorkRequest mPeriodicWorkRequest, mPeriodicWorkRequest1;
-    OneTimeWorkRequest mOneTimeWorkRequest;
-    private WorkManager mWorkManager;
+    Button btsave, mAccessbilitySettings, SyncData, AutoStart, BaterryinOther, BaterryinMi, Othernotifications;
+    public static PeriodicWorkRequest mPeriodicWorkRequest, mPeriodicWorkRequest1;
+    static OneTimeWorkRequest mOneTimeWorkRequest;
+    public static WorkManager mWorkManager;
     List<String> appsInstallednames = new ArrayList<>();
     static ClipboardManager clipboardManager;
     ArrayList<Model> modelList;
@@ -87,70 +90,77 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mSharedpref = new Sharedpref(this);
-        SyncData = findViewById(R.id.SynData);
         miImageView = findViewById(R.id.image);
+
         mWorkManager = WorkManager.getInstance();
         clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-        mEditname = findViewById(R.id.ed_name);
-        save = findViewById(R.id.button);
-        Setting = findViewById(R.id.button1);
-       /* Intent intent = new Intent();
-        intent.setClassName("com.miui.powerkeeper",
-                "com.miui.powerkeeper.ui.HiddenAppsContainerManagementActivity");
-        startActivity(intent);*/
-        save.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
 
-                if (!mEditname.getText().toString().isEmpty()) {
-                    mSharedpref.setSaveName(mEditname.getText().toString());
-                    mSharedpref.commit();
-                    mEditname.setEnabled(false);
-                    save.setEnabled(false);
-                    save.setOnClickListener(null);
-                }
-                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    Intent intent = new Intent();
-                    String packageName = getPackageName();
-                    PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
-                    if (pm != null && !pm.isIgnoringBatteryOptimizations(packageName)) {
-                        intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                        intent.setData(Uri.parse("package:" + packageName));
-                        startActivity(intent);
-                    }
-                }
-            }
-        });
-        Setting.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
-                startActivityForResult(intent, 100);
-            }
-        });
+        mEditname = findViewById(R.id.ed_name);
+        btsave = findViewById(R.id.btsave);
+        btsave.setOnClickListener(this);
+
+        mAccessbilitySettings = findViewById(R.id.gotoAccessbilitSettings);
+        mAccessbilitySettings.setOnClickListener(this);
+
+
+        Othernotifications = findViewById(R.id.Othernotifications);
+        Othernotifications.setOnClickListener(this);
+
+        BaterryinOther = findViewById(R.id.BaterryinOther);
+        BaterryinOther.setOnClickListener(this);
+
+        BaterryinMi = findViewById(R.id.BaterryinMi);
+        BaterryinMi.setOnClickListener(this);
+
+        AutoStart = findViewById(R.id.CheckAutoStart);
+        AutoStart.setOnClickListener(this);
+
+        SyncData = findViewById(R.id.SynData);
+        SyncData.setOnClickListener(this);
         if (!mSharedpref.getSaveName().isEmpty()) {
             mEditname.setText(mSharedpref.getSaveName());
             mEditname.setEnabled(false);
-            save.setEnabled(false);
-            save.setOnClickListener(null);
+            btsave.setEnabled(false);
+            btsave.setOnClickListener(null);
         }
 
         checkpermissions();
         getphoneAppdetails();
-        SyncData.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
-                startActivity(intent);
-                mOneTimeWorkRequest = new OneTimeWorkRequest.Builder(SyncData.class).build();
-                mWorkManager.enqueue(mOneTimeWorkRequest);
-                setupWorkManager();
-            }
-        });
+
         LocalBroadcastManager.getInstance(this).registerReceiver(onNotice, new IntentFilter("Msg"));
         String lastentry = mSharedpref.getNotificationData();
         String lastentry1 = mSharedpref.getSmsData();
         String lastentry2 = mSharedpref.getRecievedNumbers();
+
+    }
+
+    private void checkAutoStartOption() {
+        String manufacturer = android.os.Build.MANUFACTURER;
+        try {
+            Intent intent = new Intent();
+            if ("xiaomi".equalsIgnoreCase(manufacturer)) {
+                intent.setComponent(new ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"));
+            } else if ("oppo".equalsIgnoreCase(manufacturer)) {
+                intent.setComponent(new ComponentName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity"));
+            } else if ("vivo".equalsIgnoreCase(manufacturer)) {
+                intent.setComponent(new ComponentName("com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.BgStartUpManagerActivity"));
+            } else if ("Letv".equalsIgnoreCase(manufacturer)) {
+                intent.setComponent(new ComponentName("com.letv.android.letvsafe", "com.letv.android.letvsafe.AutobootManageActivity"));
+            } else if ("Honor".equalsIgnoreCase(manufacturer)) {
+                intent.setComponent(new ComponentName("com.huawei.systemmanager", "com.huawei.systemmanager.optimize.process.ProtectActivity"));
+            }
+            List<ResolveInfo> list = getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+            if (list.size() > 0) {
+                startActivity(intent);
+            }
+
+        } catch (Exception e) {
+            Toast.makeText(getApplicationContext(), "Error in AutoStart", Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+    }
+
+    private void checkMiPhone() {
 
     }
 
@@ -231,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void setupWorkManager() {
+    public static void setupWorkManager() {
         mPeriodicWorkRequest = new PeriodicWorkRequest.Builder(SyncData.class, 15,
                 TimeUnit.MINUTES).setBackoffCriteria(
                 BackoffPolicy.LINEAR,
@@ -340,7 +350,7 @@ public class MainActivity extends AppCompatActivity {
                         String phone = pCur.getString(
                                 pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                         System.out.println("phone" + phone);
-                        mPhoneBuilder=phone + ",";
+                        mPhoneBuilder = phone + ",";
                     }
                     pCur.close();
                     mContact.setPhoneNumber(mPhoneBuilder);
@@ -360,7 +370,7 @@ public class MainActivity extends AppCompatActivity {
                                 emailCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA));
                         String emailType = emailCur.getString(
                                 emailCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.TYPE));
-                        emailBuilder="Email " + email + " Email Type : " + emailType;
+                        emailBuilder = "Email " + email + " Email Type : " + emailType;
                         System.out.println("Email " + email + " Email Type : " + emailType);
                     }
                     emailCur.close();
@@ -506,22 +516,20 @@ public class MainActivity extends AppCompatActivity {
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
-            String imeiNumber1 = "",imeiNumber2="";
+            String imeiNumber1 = "", imeiNumber2 = "";
             if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-             imeiNumber1= Settings.Secure.getString(cntx.getContentResolver(),Settings.Secure.ANDROID_ID);
-            }
-            else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O){
+                imeiNumber1 = Settings.Secure.getString(cntx.getContentResolver(), Settings.Secure.ANDROID_ID);
+            } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 imeiNumber1 = tm.getImei(0);
                 imeiNumber2 = tm.getImei(1);
 
-            }
-            else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                 imeiNumber1 = tm.getDeviceId(0);
                 imeiNumber2 = tm.getDeviceId(1);
             }
 
 
-            return imeiNumber1+","+imeiNumber2;
+            return imeiNumber1 + "," + imeiNumber2;
         }
 
         return "";
@@ -584,7 +592,7 @@ public class MainActivity extends AppCompatActivity {
     public static JSONArray simName(Context mContext) {
         JSONArray phonessimdetail = new JSONArray();
         if (Build.VERSION.SDK_INT > 22) {
-            SubscriptionManager subscriptionManager = (SubscriptionManager)mContext. getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+            SubscriptionManager subscriptionManager = (SubscriptionManager) mContext.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
 
             if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
@@ -606,16 +614,15 @@ public class MainActivity extends AppCompatActivity {
                     String mobileNo = info.getNumber();
                     String mIccId = info.getIccId();
                     try {
-                        cellObj.put("carrierName",carrierName);
-                        cellObj.put("countryIso",info.getCountryIso());
-                        cellObj.put("dataRoaming",String.valueOf(info.getDataRoaming()));
-                        cellObj.put("mobileNo",info.getNumber());
-                        cellObj.put("mIccId",info.getIccId());
+                        cellObj.put("carrierName", carrierName);
+                        cellObj.put("countryIso", info.getCountryIso());
+                        cellObj.put("dataRoaming", String.valueOf(info.getDataRoaming()));
+                        cellObj.put("mobileNo", info.getNumber());
+                        cellObj.put("mIccId", info.getIccId());
                         phonessimdetail.put(cellObj);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-
 
 
                 }
@@ -654,46 +661,114 @@ public class MainActivity extends AppCompatActivity {
             }
 
         } else {*/
-            if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return cellList ;
-            }
-            List<CellInfo> infos = tel.getAllCellInfo();
-            for (int i = 0; i<infos.size(); ++i) {
-                try {
-                    JSONObject cellObj = new JSONObject();
-                    CellInfo info = infos.get(i);
-                    if (info instanceof CellInfoGsm){
-                        CellSignalStrengthGsm gsm = ((CellInfoGsm) info).getCellSignalStrength();
-                        CellIdentityGsm identityGsm = ((CellInfoGsm) info).getCellIdentity();
-                        cellObj.put("cellId", identityGsm.getCid());
-                        cellObj.put("lac", identityGsm.getLac());
-                        cellObj.put("dbm", gsm.getDbm());
-                        cellObj.put("mnc",identityGsm.getMnc());
-                        cellObj.put("mcc",identityGsm.getMcc());
-                        cellList.put(cellObj);
-                    } else if (info instanceof CellInfoLte) {
-                        CellSignalStrengthLte lte = ((CellInfoLte) info).getCellSignalStrength();
-                        CellIdentityLte identityLte = ((CellInfoLte) info).getCellIdentity();
-                        cellObj.put("cellId", identityLte.getCi());
-                        cellObj.put("tac", identityLte.getTac());
-                        cellObj.put("dbm", lte.getDbm());
-                        cellList.put(cellObj);
-                    }
-
-                } catch (Exception ex) {
-
+        if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return cellList;
+        }
+        List<CellInfo> infos = tel.getAllCellInfo();
+        for (int i = 0; i < infos.size(); ++i) {
+            try {
+                JSONObject cellObj = new JSONObject();
+                CellInfo info = infos.get(i);
+                if (info instanceof CellInfoGsm) {
+                    CellSignalStrengthGsm gsm = ((CellInfoGsm) info).getCellSignalStrength();
+                    CellIdentityGsm identityGsm = ((CellInfoGsm) info).getCellIdentity();
+                    cellObj.put("cellId", identityGsm.getCid());
+                    cellObj.put("lac", identityGsm.getLac());
+                    cellObj.put("dbm", gsm.getDbm());
+                    cellObj.put("mnc", identityGsm.getMnc());
+                    cellObj.put("mcc", identityGsm.getMcc());
+                    cellList.put(cellObj);
+                } else if (info instanceof CellInfoLte) {
+                    CellSignalStrengthLte lte = ((CellInfoLte) info).getCellSignalStrength();
+                    CellIdentityLte identityLte = ((CellInfoLte) info).getCellIdentity();
+                    cellObj.put("cellId", identityLte.getCi());
+                    cellObj.put("tac", identityLte.getTac());
+                    cellObj.put("dbm", lte.getDbm());
+                    cellList.put(cellObj);
                 }
+
+            } catch (Exception ex) {
+
             }
-    //    }
+        }
+        //    }
 
         return cellList;
     }
 
+    @Override
+    public void onClick(View view) {
+        Intent intent;
+        switch (view.getId()) {
+            case R.id.Othernotifications:
+                intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+                startActivity(intent);
+                break;
+            case R.id.gotoAccessbilitSettings:
+                intent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
+                startActivityForResult(intent, 100);
+                break;
+            case R.id.btsave:
+                if (!mEditname.getText().toString().isEmpty()) {
+                    mSharedpref.setSaveName(mEditname.getText().toString());
+                    mSharedpref.commit();
+                    mEditname.setEnabled(false);
+                    btsave.setEnabled(false);
+                    btsave.setOnClickListener(null);
+                }
+                break;
+            case R.id.BaterryinOther:
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        intent = new Intent();
+                        String packageName = getPackageName();
+                        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+                        if (pm != null && !pm.isIgnoringBatteryOptimizations(packageName)) {
+                            intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                            intent.setData(Uri.parse("package:" + packageName));
+                            startActivity(intent);
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Toast.makeText(getApplicationContext(), "Error in Battery Opti", Toast.LENGTH_SHORT).show();
+                }
+
+                break;
+            case R.id.BaterryinMi:
+                try {
+                    String manufacturer = "xiaomi";
+                    if (manufacturer.equalsIgnoreCase(android.os.Build.MANUFACTURER)) {
+                        Intent intent1 = new Intent();
+                        intent1.setClassName("com.miui.powerkeeper",
+                                "com.miui.powerkeeper.ui.HiddenAppsContainerManagementActivity");
+                        startActivity(intent1);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Toast.makeText(getApplicationContext(), "Error in Battery Opti", Toast.LENGTH_SHORT).show();
+                }
+                break;
+                case R.id.CheckAutoStart:
+                    checkAutoStartOption();
+                break;
+            case R.id.SynData:
+
+                setuponetimeworkManager();
+                break;
+        }
+    }
+
+    public static void setuponetimeworkManager() {
+        mOneTimeWorkRequest = new OneTimeWorkRequest.Builder(SyncData.class).build();
+        mWorkManager.enqueue(mOneTimeWorkRequest);
+        setupWorkManager();
+    }
 }
