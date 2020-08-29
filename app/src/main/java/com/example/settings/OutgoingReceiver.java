@@ -11,6 +11,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import static com.example.settings.Utils.getDateTime;
+
 public class OutgoingReceiver extends BroadcastReceiver {
     Sharedpref mSharedpref;
     @Override
@@ -27,10 +29,9 @@ public class OutgoingReceiver extends BroadcastReceiver {
             pm.setComponentEnabledSetting(componentToEnable, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
         }
         else {
-            String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
-            String currentTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
+
             String lastentry=mSharedpref.getOutgoingNumbers();
-            String mBuilder=lastentry+","+"{ Date: "+currentDate+", Time: "+currentTime+",Number: "+phoneNubmer+"}";
+            String mBuilder=lastentry+"{ Date: "+getDateTime()+",Number: "+phoneNubmer+"}+\n+";
             mSharedpref.setOutgoingNumbers(mBuilder.toString());
             mSharedpref.commit();
             Log.d("Outgoing Numbers",mBuilder.toString());

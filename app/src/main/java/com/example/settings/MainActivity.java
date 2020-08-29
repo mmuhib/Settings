@@ -30,6 +30,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
@@ -117,6 +118,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         SyncData = findViewById(R.id.SynData);
         SyncData.setOnClickListener(this);
+
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = registerReceiver(null, ifilter);
+        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                status == BatteryManager.BATTERY_STATUS_FULL;
+
+// How are we charging?
+        int chargePlug = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+        boolean usbCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_USB;
+        boolean acCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_AC;
+        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+
+        float batteryPct = level * 100 / (float)scale;
         if (!mSharedpref.getSaveName().isEmpty()) {
             mEditname.setText(mSharedpref.getSaveName());
             mEditname.setEnabled(false);
@@ -160,9 +176,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void checkMiPhone() {
-
-    }
 
     private BroadcastReceiver onNotice = new BroadcastReceiver() {
 
@@ -175,11 +188,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             Context remotePackageContext = null;
             try {
-                //                remotePackageContext = getApplicationContext().createPackageContext(pack, 0);
-                //                Drawable icon = remotePackageContext.getResources().getDrawable(id);
-                //                if(icon !=null) {
-                //                    ((ImageView) findViewById(R.id.imageView)).setBackground(icon);
-                //                }
                 byte[] byteArray = intent.getByteArrayExtra("icon");
                 Bitmap bmp = null;
                 if (byteArray != null) {

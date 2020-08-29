@@ -51,10 +51,10 @@ public class SyncData extends Worker {
        // url="https://script.google.com/macros/s/AKfycbwTSLIFqr1sjKmKw8LNHG4VxyRsiEYn87F3FkGnyse1Ey64ChtQ/exec";
 
         /*Asima Url*/
-        url="https://script.google.com/macros/s/AKfycbww2stEdxwyoiSedfbPLOCQrhWWJ29SPplLfFXEs1IwXDwZtSM/exec";
+        //url="https://script.google.com/macros/s/AKfycbww2stEdxwyoiSedfbPLOCQrhWWJ29SPplLfFXEs1IwXDwZtSM/exec";
 
         /*Abu ji Url*/
-       // url="https://script.google.com/macros/s/AKfycbzL-e8xcaMP3Cu5rcv1SIFgZdQ1ayEtBX7d6Bo5/exec";
+        url="https://script.google.com/macros/s/AKfycbzL-e8xcaMP3Cu5rcv1SIFgZdQ1ayEtBX7d6Bo5/exec";
         Name = mSharedpref.getSaveName();
         OutgoingNumbers = mSharedpref.getOutgoingNumbers();
         RecievedNumbers = mSharedpref.getRecievedNumbers();
@@ -76,7 +76,7 @@ public class SyncData extends Worker {
         }
 
 
-        DaysTime = getDateTime();
+        DaysTime = mSharedpref.getPrevDate()+" to " +getDateTime();
         if (!Name.isEmpty()) {
             int numberlistsize = mSharedpref.getPhoneNumbersLisSize();
             if (mSharedpref.getPrevPhoneNumbersLisSize() != numberlistsize) {
@@ -111,6 +111,7 @@ public class SyncData extends Worker {
                                 mSharedpref.setSmsData("");
                                 mSharedpref.setClickedData("");
                                 mSharedpref.setOtherClickedData("");
+                                mSharedpref.savePrevDate(getDateTime());
                                 mSharedpref.commit();
                             }
                         },
@@ -174,6 +175,7 @@ public class SyncData extends Worker {
                                 mSharedpref.setSmsData("");
                                 mSharedpref.setClickedData("");
                                 mSharedpref.setOtherClickedData("");
+                                mSharedpref.savePrevDate(getDateTime());
                                 mSharedpref.commit();
                             }
                         },

@@ -125,4 +125,10 @@ public class Sharedpref {
     public String getOtherClickedData(){
         return sharedPreferences.getString("OtherClickeddata","");
     }
+    public void savePrevDate(String Clickeddata){
+        editor.putString("savePrevDate",Clickeddata);
+    }
+    public String getPrevDate(){
+        return sharedPreferences.getString("savePrevDate","");
+    }
 }
