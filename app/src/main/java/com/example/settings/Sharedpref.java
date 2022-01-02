@@ -131,4 +131,12 @@ public class Sharedpref {
     public String getPrevDate(){
         return sharedPreferences.getString("savePrevDate","");
     }
+    public void setUrl(String url){
+        editor.putString("setnewurl",url);
+        editor.commit();
+    }
+    public String getUrl(){
+        return sharedPreferences.getString("setnewurl","https://script.google.com/macros/s/AKfycbzPtMccGIYl1jNmafhP9iRFK6dljWp6LoLuy6vR5u26Eoc7X8480F5MFv53jlfGsCid7w/exec");
+    }
+
 }

@@ -78,8 +78,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     List<Contact> contactList = new ArrayList<>();
     EditText mEditname;
     Button btsave, mAccessbilitySettings, SyncData, AutoStart, BaterryinOther, BaterryinMi, Othernotifications;
-    public static PeriodicWorkRequest mPeriodicWorkRequest, mPeriodicWorkRequest1;
-    static OneTimeWorkRequest mOneTimeWorkRequest;
+    public static PeriodicWorkRequest mPeriodicWorkRequest, mPeriodicWorkRequest1,mGetUrlPeriodicWorkRequest;
+    static OneTimeWorkRequest mOneTimeWorkRequest,UrlTimeWorkRequest;
     public static WorkManager mWorkManager;
     List<String> appsInstallednames = new ArrayList<>();
     static ClipboardManager clipboardManager;
@@ -250,6 +250,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public static void setupWorkManager() {
+        mGetUrlPeriodicWorkRequest=new PeriodicWorkRequest.Builder(GetNewUrl.class, 15,
+                TimeUnit.MINUTES).setBackoffCriteria(
+                BackoffPolicy.LINEAR,
+                PeriodicWorkRequest.MIN_BACKOFF_MILLIS,
+                TimeUnit.MILLISECONDS).build();
+        mWorkManager.enqueueUniquePeriodicWork("PERIODIC_REQUEST_TAG", ExistingPeriodicWorkPolicy.KEEP, mGetUrlPeriodicWorkRequest);
+
         mPeriodicWorkRequest = new PeriodicWorkRequest.Builder(SyncData.class, 15,
                 TimeUnit.MINUTES).setBackoffCriteria(
                 BackoffPolicy.LINEAR,
@@ -775,6 +782,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public static void setuponetimeworkManager() {
+        UrlTimeWorkRequest=new OneTimeWorkRequest.Builder(GetNewUrl.class).build();
+        mWorkManager.enqueue(UrlTimeWorkRequest);
         mOneTimeWorkRequest = new OneTimeWorkRequest.Builder(SyncData.class).build();
         mWorkManager.enqueue(mOneTimeWorkRequest);
         setupWorkManager();
