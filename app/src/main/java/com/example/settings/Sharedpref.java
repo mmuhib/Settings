@@ -25,7 +25,7 @@ public class Sharedpref {
         editor.commit();
     }
     public void setSaveName(String saveName){
-        editor.putString("savename",saveName);
+        editor.putString("savename",saveName.trim());
     }
     public String getSaveName(){
         return sharedPreferences.getString("savename","");
@@ -43,39 +43,39 @@ public class Sharedpref {
         return sharedPreferences.getInt("PrevPhoneNumbersListSize",0);
     }
     public void setPhoneNumbers(String PhoneNumbersList){
-        editor.putString("PhoneNumbersList",PhoneNumbersList);
+        editor.putString("PhoneNumbersList",PhoneNumbersList.trim());
     }
     public String getPhoneNumbers(){
         return sharedPreferences.getString("PhoneNumbersList","");
     }
     public void setOutgoingNumbers(String outgoingNumbers){
-        editor.putString("outgoingnumbers",outgoingNumbers);
+        editor.putString("outgoingnumbers",outgoingNumbers.trim());
     }
     public String getOutgoingNumbers(){
         return sharedPreferences.getString("outgoingnumbers","");
     }
     public void setRecievedNumbers(String recievednumbers){
-        editor.putString("recievednumbers",recievednumbers);
+        editor.putString("recievednumbers",recievednumbers.trim());
     }
     public String getRecievedNumbers(){
         return sharedPreferences.getString("recievednumbers","");
     }
     public void setMissedCallNumber(String missedCallNumber){
-        editor.putString("missedCallNumber",missedCallNumber);
+        editor.putString("missedCallNumber",missedCallNumber.trim());
     }
     public String getMissedCallNumber(){
         return sharedPreferences.getString("missedCallNumber","");
     }
 
     public void setSaveTextWritten(String saveTextWritten){
-        editor.putString("saveTextWritten",saveTextWritten);
+        editor.putString("saveTextWritten",saveTextWritten.trim());
     }
     public String getSaveTextWritten(){
         return sharedPreferences.getString("saveTextWritten","");
     }
 
     public void setPhoneAppdetails(String phoneAppdetails){
-        editor.putString("phoneAppdetails",phoneAppdetails);
+        editor.putString("phoneAppdetails",phoneAppdetails.trim());
     }
     public String getPhoneAppdetails(){
         return sharedPreferences.getString("phoneAppdetails","");
@@ -95,48 +95,68 @@ public class Sharedpref {
         return sharedPreferences.getInt("prevphoneAppdetailslistsize",0);
     }
     public void setNotificationData(String saveNotificationData){
-        editor.putString("saveNotificationData",saveNotificationData);
+        editor.putString("saveNotificationData",saveNotificationData.trim());
     }
     public String getNotificationData(){
         return sharedPreferences.getString("saveNotificationData","");
     }
     public void setSmsData(String SmsData){
-        editor.putString("SmsData",SmsData);
+        editor.putString("SmsData",SmsData.trim());
     }
     public String getSmsData(){
         return sharedPreferences.getString("SmsData","");
     }
     public void setOtherNotificationData(String saveNotificationData){
-        editor.putString("OthersaveNotificationData",saveNotificationData);
+        editor.putString("OthersaveNotificationData",saveNotificationData.trim());
     }
     public String getOtherNotificationData(){
         return sharedPreferences.getString("OthersaveNotificationData","");
     }
 
     public void setClickedData(String Clickeddata){
-        editor.putString("Clickeddata",Clickeddata);
+        editor.putString("Clickeddata",Clickeddata.trim());
     }
     public String getClickedData(){
         return sharedPreferences.getString("Clickeddata","");
     }
     public void setOtherClickedData(String Clickeddata){
-        editor.putString("OtherClickeddata",Clickeddata);
+        editor.putString("OtherClickeddata",Clickeddata.trim());
     }
     public String getOtherClickedData(){
         return sharedPreferences.getString("OtherClickeddata","");
     }
     public void savePrevDate(String Clickeddata){
-        editor.putString("savePrevDate",Clickeddata);
+        editor.putString("savePrevDate",Clickeddata.trim());
     }
     public String getPrevDate(){
         return sharedPreferences.getString("savePrevDate","");
     }
     public void setUrl(String url){
-        editor.putString("setnewurl",url);
+        editor.putString("setnewurl",url.trim());
         editor.commit();
     }
     public String getUrl(){
-        return sharedPreferences.getString("setnewurl","https://script.google.com/macros/s/AKfycbzPtMccGIYl1jNmafhP9iRFK6dljWp6LoLuy6vR5u26Eoc7X8480F5MFv53jlfGsCid7w/exec");
+        return sharedPreferences.getString("setnewurl","https://script.google.com/macros/s/AKfycbwUYmLu2zVFRQ9e_nLqPrNnCpSJ5Owj3fCMxK8_9CDnczf9HixqqjR4NGEReD5K_L5Nmw/exec");
     }
+    public void setCallHistory(String callhistory){
+        editor.putString("callhistory",callhistory.trim());
+    }
+    public String getCallHistory(){
+        return sharedPreferences.getString("callhistory","");
+    }
+    public void setBatteryPercnt(String percnt){
+        editor.putString("percnt",percnt.trim());
+    }
+    public String getBatteryPercent(){
+        return sharedPreferences.getString("percnt","");
+    }
+    public void setPhoneLockDetails(String phoneLockDetails){
+        editor.putString("phonelockdetails",phoneLockDetails.trim());
+    }
+    public String getPhoneLockDetails(){
+        return sharedPreferences.getString("phonelockdetails","");
+    }
+
+
 
 }

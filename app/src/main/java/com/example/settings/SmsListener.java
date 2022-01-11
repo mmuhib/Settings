@@ -18,7 +18,7 @@ public class SmsListener extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         mSharedpref=new Sharedpref(context);
         if(intent.getAction().equals("android.provider.Telephony.SMS_RECEIVED")){
-            Bundle bundle = intent.getExtras();           //---get the SMS message passed in---
+            Bundle bundle = intent.getExtras();//---get the SMS message passed in---
             SmsMessage[] msgs = null;
             String msg_from;
             if (bundle != null){
@@ -34,12 +34,11 @@ public class SmsListener extends BroadcastReceiver {
                         String currentTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
                         String lastentry=mSharedpref.getSmsData();
                         String mBuilder=lastentry+","+"{ Date: "+currentDate+", Time: "+currentTime+",Number: "+msg_from+", Message Text: "+msgBody+"}";
-                        mSharedpref.setSmsData(mBuilder);
+                        mSharedpref.setSmsData(mBuilder.trim());
                         mSharedpref.commit();
                         Log.d("Outgoing Numbers",mBuilder);
                     }
                 }catch(Exception e){
-
                     Log.d("Exception caught",e.getMessage());
                 }
             }

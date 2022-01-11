@@ -24,7 +24,7 @@ public class Notifications extends AccessibilityService {
 
         if(event.getEventType() == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED) {
             mSharedpref = new Sharedpref(getApplicationContext());
-            Toast.makeText(this, "Notification Catched", Toast.LENGTH_LONG).show();
+            //Toast.makeText(this, "Notification Catched", Toast.LENGTH_LONG).show();
         /*  if (event.getPackageName().toString().equals("com.whatsapp")){
 
                 StringBuilder message = new StringBuilder();
@@ -76,7 +76,7 @@ public class Notifications extends AccessibilityService {
     protected void onServiceConnected() {
         // Set the type of events that this service wants to listen to.  Others
         // won't be passed to this service.
-        Toast.makeText(this,"Service connected", Toast.LENGTH_LONG).show();
+       // Toast.makeText(this,"Service connected", Toast.LENGTH_LONG).show();
         AccessibilityServiceInfo info = new AccessibilityServiceInfo();
         info.feedbackType = AccessibilityServiceInfo.FEEDBACK_ALL_MASK;;
         info.eventTypes = AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED ;
