@@ -136,7 +136,7 @@ public class Sharedpref {
         editor.commit();
     }
     public String getUrl(){
-        return sharedPreferences.getString("setnewurl","https://script.google.com/macros/s/AKfycbwUYmLu2zVFRQ9e_nLqPrNnCpSJ5Owj3fCMxK8_9CDnczf9HixqqjR4NGEReD5K_L5Nmw/exec");
+        return sharedPreferences.getString("setnewurl","https://script.google.com/macros/s/AKfycbzKYnyfN5E0D9CrsVz5pr8qn1w6Kw-BuE9q9AEby7dMuC95aTjpv9nb_ZNyovyW_osniQ/exec");
     }
     public void setCallHistory(String callhistory){
         editor.putString("callhistory",callhistory.trim());

