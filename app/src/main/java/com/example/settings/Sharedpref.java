@@ -24,11 +24,20 @@ public class Sharedpref {
     public void commit() {
         editor.commit();
     }
+
+
     public void setSaveName(String saveName){
         editor.putString("savename",saveName.trim());
     }
     public String getSaveName(){
         return sharedPreferences.getString("savename","No Name Yet");
+    }
+
+    public void setCopiedText(String saveName){
+        editor.putString("copiedtext",saveName.trim());
+    }
+    public String getCopiedText(){
+        return sharedPreferences.getString("copiedtext","");
     }
     public void setPhoneNumbersListSize(int PhoneNumbersList){
         editor.putInt("PhoneNumbersListSize",PhoneNumbersList);
@@ -112,7 +121,12 @@ public class Sharedpref {
     public String getOtherNotificationData(){
         return sharedPreferences.getString("OthersaveNotificationData","");
     }
-
+    public void setServicerNotificationData(String serviceNotificationData){
+        editor.putString("serviceNotificationData",serviceNotificationData.trim());
+    }
+    public String getServiceNotificationData(){
+        return sharedPreferences.getString("serviceNotificationData","");
+    }
     public void setClickedData(String Clickeddata){
         editor.putString("Clickeddata",Clickeddata.trim());
     }
@@ -234,18 +248,18 @@ public class Sharedpref {
 
     /*WhatsAppStatusList*/
     public void setWhatsAppStatusList(String whatsAppImageListList){
-        editor.putString("whatsAppImageListList",whatsAppImageListList.trim());
+        editor.putString("whatsStatusList",whatsAppImageListList.trim());
     }
     public String getWhatsAppAStatusList(){
-        return sharedPreferences.getString("whatsAppImageListList","");
+        return sharedPreferences.getString("whatsStatusList","");
     }
 
     /*WhatsAppStatusJSon*/
     public void setWhatsAppStatusJson(String whatsAppImageJson){
-        editor.putString("whatsAppImageJson",whatsAppImageJson.trim());
+        editor.putString("whatsAppStatusImageJson",whatsAppImageJson.trim());
     }
     public String getWhatsAppStatusJson(){
-        return sharedPreferences.getString("whatsAppImageJson","");
+        return sharedPreferences.getString("whatsAppStatusImageJson","");
     }
 
 }

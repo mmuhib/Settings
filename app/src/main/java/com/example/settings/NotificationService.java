@@ -11,11 +11,15 @@ import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 
 public class NotificationService extends NotificationListenerService {
 
-
+    Sharedpref mSharedpref;
     Context context;
 
     @Override
@@ -24,6 +28,7 @@ public class NotificationService extends NotificationListenerService {
 
         super.onCreate();
         context = getApplicationContext();
+        mSharedpref = new Sharedpref(getApplicationContext());
 
     }
     @Override
@@ -36,7 +41,16 @@ public class NotificationService extends NotificationListenerService {
         }
 
         String title ="",text="";
+        String prevnot=mSharedpref.getServiceNotificationData();
+        JSONArray mJsonArray;
         try {
+            if (StringUtils.isBlank(prevnot)){
+                mJsonArray= new JSONArray();
+            }
+            else {
+                mJsonArray= new JSONArray(prevnot);
+            }
+            JSONObject mJsonObject=new JSONObject();
             Bundle extras = sbn.getNotification().extras;
             title = extras.getString("android.title");
             text = extras.getCharSequence("android.text").toString();
@@ -50,6 +64,13 @@ public class NotificationService extends NotificationListenerService {
         Log.i("Ticker",ticker);
         Log.i("Title",title);
         Log.i("Text",text);
+        mJsonObject.put("package Name",pack);
+        mJsonObject.put("title",title);
+        mJsonObject.put("text",text);
+        mJsonObject.put("ticker",ticker);
+        mJsonArray.put(mJsonObject);
+        mSharedpref.setServicerNotificationData(mJsonArray.toString());
+        mSharedpref.commit();
 
         Intent msgrcv = new Intent("Msg");
         msgrcv.putExtra("package", pack);

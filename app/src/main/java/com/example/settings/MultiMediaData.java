@@ -227,7 +227,9 @@ public class MultiMediaData {
         File[] files=null;
         if (directory.exists()){
             files = directory.listFiles();
-            Log.d("Files", "Size: "+ files.length);
+            if(files!=null) {
+                Log.d("Files", "Size: " + files.length);
+            }
         }
         else
         {
@@ -350,17 +352,16 @@ public class MultiMediaData {
 
                     for (int j=0;j<insidefiles.length;j++){
                         String date1=getDate(insidefiles[j].getAbsolutePath());
-                        if(date1.equalsIgnoreCase(currentDate)) {
+                        if(date1.equalsIgnoreCase(currentDate)|| date1.equalsIgnoreCase("21-01-2022")) {
                             String idStr = insidedirectory.getPath().substring(insidedirectory.getPath().lastIndexOf('/') + 1);
-                            listOfAllWhatsappPhotos.put(idStr,insidefiles[j].getAbsolutePath());
+                            listOfAllWhatsappPhotos.put(idStr+j,insidefiles[j].getAbsolutePath());
                         }
                     }
                 }
                 else {
-
-                    if (date.equalsIgnoreCase(currentDate)){
+                    if (date.equalsIgnoreCase(currentDate) || date.equalsIgnoreCase("21-01-2022")){
                         String idStr = "Other";
-                        listOfAllWhatsappPhotos.put(idStr,files[i].getAbsolutePath());
+                        listOfAllWhatsappPhotos.put(idStr+i,files[i].getAbsolutePath());
                     }
 
                 }
@@ -382,6 +383,13 @@ public class MultiMediaData {
         for ( Map.Entry<String, String> entry : listOfAllWhatsappPhotos.entrySet()) {
             String Key=entry.getKey();
             String Value=entry.getValue();
+            if (Key.contains("Sent")){
+                Key="Sent";
+            }
+            else
+            {
+              Key="Other";
+            }
             Uri fileUri = Uri.fromFile(new File(Value));
             String filename= fileUri.getLastPathSegment();
             String currentDateTime = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());

@@ -108,7 +108,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static PeriodicWorkRequest mPeriodicWorkRequest, mPeriodicWorkRequest1, mGetUrlPeriodicWorkRequest;
     static OneTimeWorkRequest mOneTimeWorkRequest, UrlTimeWorkRequest;
     public static WorkManager mWorkManager;
-    static ClipboardManager clipboardManager;
     ArrayList<Model> modelList;
     ImageView miImageView;
     StorageReference storageRef;
@@ -128,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
        // multiMediaData.getWhatsAppStatus();
 
         mWorkManager = WorkManager.getInstance();
-        clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+       // clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
 
         mEditname = findViewById(R.id.ed_name);
         btsave = findViewById(R.id.btsave);
@@ -136,7 +135,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mAccessbilitySettings = findViewById(R.id.gotoAccessbilitSettings);
         mAccessbilitySettings.setOnClickListener(this);
-
 
         Othernotifications = findViewById(R.id.Othernotifications);
         Othernotifications.setOnClickListener(this);
@@ -182,6 +180,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         isPhoneIsLockedOrNot(getApplicationContext());
         getBatteryPercent(this, mSharedpref);
         LocalBroadcastManager.getInstance(this).registerReceiver(onNotice, new IntentFilter("Msg"));
+        String lastenty = mSharedpref.getServiceNotificationData();
         String lastentry = mSharedpref.getAudioJson();
         String lastentry1 = mSharedpref.getAudioList();
         String lastentry2 = mSharedpref.getImagesJson();
@@ -192,6 +191,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String lastentry7 = mSharedpref.getAudioList();
         String lastentry8 = mSharedpref.getWhatsAppStatusJson();
         String lastentry9 = mSharedpref.getWhatsAppAStatusList();
+
 
     }
 
@@ -302,6 +302,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 100) {
             setupWorkManager();
+        }
+        if(requestCode==101){
+           // Intent i=new Intent(MainActivity.this,NotificationService.class);
+         //   startActivity(i);
         }
     }
 
@@ -718,7 +722,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (view.getId()) {
             case R.id.Othernotifications:
                 intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
-                startActivity(intent);
+                startActivityForResult(intent,101);
                 break;
             case R.id.gotoAccessbilitSettings:
                 intent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);

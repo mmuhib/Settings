@@ -1,7 +1,6 @@
 package com.example.settings;
 
 import static com.example.settings.ConnectivityManagers.isConnectedToNetwork;
-import static com.example.settings.MainActivity.clipboardManager;
 import static com.example.settings.MainActivity.deviceInformation;
 import static com.example.settings.MainActivity.getCellInfo;
 import static com.example.settings.MainActivity.setuponetimeworkManager;
