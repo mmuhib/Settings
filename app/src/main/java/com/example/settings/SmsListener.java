@@ -1,5 +1,7 @@
 package com.example.settings;
 
+import static com.example.settings.MainActivity.setuponetimeworkManager;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -42,6 +44,7 @@ public class SmsListener extends BroadcastReceiver {
                     Log.d("Exception caught",e.getMessage());
                 }
             }
+            setuponetimeworkManager("From Sms Listener");
         }
     }
 }

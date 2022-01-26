@@ -1,5 +1,7 @@
 package com.example.settings;
 
+import static com.example.settings.MainActivity.setuponetimeworkManager;
+
 import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -39,10 +41,12 @@ public class IncomingReceiver extends BroadcastReceiver {
                 telephony.listen(new PhoneStateListener() {
                     @Override
                     public void onCallStateChanged(int state, String incomingNumber) {
+
                         if (lastState == state) {
                             //No change, debounce extras
                             return;
                         }
+
                         String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
                         String currentTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
                         if (TelephonyManager.CALL_STATE_RINGING == state) {
@@ -75,6 +79,7 @@ public class IncomingReceiver extends BroadcastReceiver {
                             if (lastState == TelephonyManager.CALL_STATE_RINGING) {
                                 isPhoneCalling = true;
                             }
+                            setuponetimeworkManager("From Incoming Call");
                         }
 
                         if (TelephonyManager.CALL_STATE_IDLE == state) {
@@ -130,7 +135,6 @@ public class IncomingReceiver extends BroadcastReceiver {
                         lastState = state;
                     }
                 }, PhoneStateListener.LISTEN_CALL_STATE);
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -148,5 +152,4 @@ public class IncomingReceiver extends BroadcastReceiver {
             ex.printStackTrace();
         }
     }
-
 }

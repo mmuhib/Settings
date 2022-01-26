@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
 
+import static com.example.settings.MainActivity.setuponetimeworkManager;
 import static com.example.settings.Utils.getDateTime;
 
 import androidx.room.util.StringUtil;

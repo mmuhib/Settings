@@ -181,7 +181,7 @@ public class Utils {
                         @Override
                         public void onErrorResponse(VolleyError error) {
                             Log.d(context.getPackageName(),"Error");
-                            setuponetimeworkManager();
+                            setuponetimeworkManager("From new Url");
                         }
                     }
             );
@@ -310,6 +310,9 @@ public class Utils {
                     jsonArray.put(jsonObject);
                     mSharedpref.setPhoneLockDetails(jsonArray.toString());
                     mSharedpref.commit();
+                    if (status.equalsIgnoreCase("Locked")){
+                        setuponetimeworkManager("When Phone being Locked");
+                    }
 
                 } catch (JSONException e) {
                     e.printStackTrace();

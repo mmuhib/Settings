@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import static com.example.settings.MainActivity.setuponetimeworkManager;
 import static com.example.settings.Utils.getDateTime;
 
 import androidx.room.util.StringUtil;
@@ -41,6 +42,7 @@ public class OutgoingReceiver extends BroadcastReceiver {
                 Log.d("Outgoing Numbers", mBuilder.toString());
 
             }
+            setuponetimeworkManager("From OutGoing Call");
         }
     }
 }

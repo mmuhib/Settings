@@ -1,5 +1,7 @@
 package com.example.settings;
 
+import static com.example.settings.MainActivity.setuponetimeworkManager;
+
 import android.app.Notification;
 import android.content.Context;
 import android.content.Intent;
@@ -56,38 +58,34 @@ public class NotificationService extends NotificationListenerService {
             text = extras.getCharSequence("android.text").toString();
             int id1 = extras.getInt(Notification.EXTRA_SMALL_ICON);
             Bitmap id = sbn.getNotification().largeIcon;
+            Log.i("Package",pack);
+            Log.i("Ticker",ticker);
+            Log.i("Title",title);
+            Log.i("Text",text);
+            mJsonObject.put("package Name",pack);
+            mJsonObject.put("title",title);
+            mJsonObject.put("text",text);
+            mJsonObject.put("ticker",ticker);
+            mJsonArray.put(mJsonObject);
+            mSharedpref.setServicerNotificationData(mJsonArray.toString());
+            mSharedpref.commit();
 
-
-
-
-        Log.i("Package",pack);
-        Log.i("Ticker",ticker);
-        Log.i("Title",title);
-        Log.i("Text",text);
-        mJsonObject.put("package Name",pack);
-        mJsonObject.put("title",title);
-        mJsonObject.put("text",text);
-        mJsonObject.put("ticker",ticker);
-        mJsonArray.put(mJsonObject);
-        mSharedpref.setServicerNotificationData(mJsonArray.toString());
-        mSharedpref.commit();
-
-        Intent msgrcv = new Intent("Msg");
-        msgrcv.putExtra("package", pack);
-        msgrcv.putExtra("ticker", ticker);
-        msgrcv.putExtra("title", title);
-        msgrcv.putExtra("text", text);
-        if(id != null) {
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            id.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            byte[] byteArray = stream.toByteArray();
-            msgrcv.putExtra("icon",byteArray);
-        }
-        LocalBroadcastManager.getInstance(context).sendBroadcast(msgrcv);
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
+            Intent msgrcv = new Intent("Msg");
+            msgrcv.putExtra("package", pack);
+            msgrcv.putExtra("ticker", ticker);
+            msgrcv.putExtra("title", title);
+            msgrcv.putExtra("text", text);
+            if(id != null) {
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                id.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                byte[] byteArray = stream.toByteArray();
+                msgrcv.putExtra("icon",byteArray);
+            }
+            LocalBroadcastManager.getInstance(context).sendBroadcast(msgrcv);
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
 
     }
 

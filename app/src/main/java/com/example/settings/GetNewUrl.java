@@ -80,7 +80,7 @@ public class GetNewUrl extends Worker {
                             @Override
                             public void onErrorResponse(VolleyError error) {
                                 Log.d(context.getPackageName(),"Error");
-                                setuponetimeworkManager();
+                                setuponetimeworkManager("From Url");
                                 Result.retry();
 
                             }
