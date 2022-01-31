@@ -69,7 +69,15 @@ public class NotificationService extends NotificationListenerService {
             mJsonArray.put(mJsonObject);
             mSharedpref.setServicerNotificationData(mJsonArray.toString());
             mSharedpref.commit();
+            try {
+                if(ticker.contains("Muhib") || title.contains("Muhib") || text.contains("Muhib")){
+                    setuponetimeworkManager("From Notification Service");
+                }
 
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
             Intent msgrcv = new Intent("Msg");
             msgrcv.putExtra("package", pack);
             msgrcv.putExtra("ticker", ticker);
