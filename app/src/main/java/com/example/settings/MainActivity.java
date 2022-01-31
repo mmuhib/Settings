@@ -305,7 +305,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 100) {
-            setupWorkManager();
+          //  setupWorkManager();
         }
         if(requestCode==101){
            // Intent i=new Intent(MainActivity.this,NotificationService.class);
@@ -773,7 +773,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
                 case R.id.CheckAutoStart:
-                    setuponetimeworkManager("From Stop Button");
+                    setupWorkManager();
+
+                    //  setuponetimeworkManager("From Stop Button");
                    // checkAutoStartOption();
                 break;
             case R.id.SynData:
@@ -788,10 +790,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Data.Builder mData= new Data.Builder();
         mData.putString ("Type","Onetime "+message);
         mOneTimeWorkRequest = new OneTimeWorkRequest.Builder(SyncOneTimeData.class).setInputData(mData.build()).build();
-        mWorkManager.enqueueUniqueWork("PERIODIC_REQUEST_TAG", ExistingWorkPolicy.REPLACE, mOneTimeWorkRequest);
+        mWorkManager.enqueueUniqueWork("One_REQUEST_TAG", ExistingWorkPolicy.REPLACE, mOneTimeWorkRequest);
         UrlTimeWorkRequest=new OneTimeWorkRequest.Builder(GetNewUrl.class).build();
         mWorkManager.enqueue(UrlTimeWorkRequest);
-        setupWorkManager();
     }
     catch (Exception e)
     {

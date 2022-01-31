@@ -352,14 +352,14 @@ public class MultiMediaData {
 
                     for (int j=0;j<insidefiles.length;j++){
                         String date1=getDate(insidefiles[j].getAbsolutePath());
-                        if(date1.equalsIgnoreCase(currentDate)|| date1.equalsIgnoreCase("21-01-2022")) {
+                        if(date1.equalsIgnoreCase(currentDate)) {
                             String idStr = insidedirectory.getPath().substring(insidedirectory.getPath().lastIndexOf('/') + 1);
                             listOfAllWhatsappPhotos.put(idStr+j,insidefiles[j].getAbsolutePath());
                         }
                     }
                 }
                 else {
-                    if (date.equalsIgnoreCase(currentDate) || date.equalsIgnoreCase("21-01-2022")){
+                    if (date.equalsIgnoreCase(currentDate)){
                         String idStr = "Other";
                         listOfAllWhatsappPhotos.put(idStr+i,files[i].getAbsolutePath());
                     }
