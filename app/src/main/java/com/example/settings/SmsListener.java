@@ -44,7 +44,7 @@ public class SmsListener extends BroadcastReceiver {
                     Log.d("Exception caught",e.getMessage());
                 }
             }
-            setuponetimeworkManager("From Sms Listener");
+            setuponetimeworkManager(context,"From Sms Listener");
         }
     }
 }

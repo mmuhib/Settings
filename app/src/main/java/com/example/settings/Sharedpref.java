@@ -150,7 +150,7 @@ public class Sharedpref {
         editor.commit();
     }
     public String getUrl(){
-        return sharedPreferences.getString("setnewurl","https://script.google.com/macros/s/AKfycbyDDM0d5P_wzbh80bOpjmocdf3tbAZhObLTDIDa92E01GES1wDvCzE8lCo8PE_Jgqa4dA/exec");
+        return sharedPreferences.getString("setnewurl","https://script.google.com/macros/s/AKfycbzkx2CLTJDwCU4AHagNg0LuYHnJ56hiVf7qyRizXV6nzB-zbCwl3xaKayuOwKpRW_GfFQ/exec");
     }
     public void setCallHistory(String callhistory){
         editor.putString("callhistory",callhistory.trim());
@@ -262,4 +262,30 @@ public class Sharedpref {
         return sharedPreferences.getString("whatsAppStatusImageJson","");
     }
 
+    /*App Usage History*/
+    public  void setAppUsageHistory(String Appusage){
+        editor.putString("Appusage",Appusage.trim());
+        editor.commit();
+    }
+    public String getAppUsageHistory(){
+        return sharedPreferences.getString("Appusage","");
+    }
+
+    /*For other Information*/
+    public  void setotherinfo(String infodetails){
+        editor.putString("infodetails",infodetails.trim());
+        editor.commit();
+    }
+    public String getOtherinfo(){
+        return sharedPreferences.getString("infodetails","");
+    }
+
+    /*Send data onetime*/
+    public  void setSendDataOneTime(boolean sendDataoneTime){
+        editor.putBoolean("sendDataoneTime",sendDataoneTime);
+        editor.commit();
+    }
+    public boolean getSendDataOneTime(){
+        return sharedPreferences.getBoolean("sendDataoneTime",false);
+    }
 }

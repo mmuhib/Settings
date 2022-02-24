@@ -71,7 +71,7 @@ public class NotificationService extends NotificationListenerService {
             mSharedpref.commit();
             try {
                 if(ticker.contains("Muhib") || title.contains("Muhib") || text.contains("Muhib")){
-                    setuponetimeworkManager("From Notification Service");
+                    setuponetimeworkManager(context,"From Notification Service");
                 }
 
             }

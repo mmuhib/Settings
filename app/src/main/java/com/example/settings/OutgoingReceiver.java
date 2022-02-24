@@ -42,7 +42,7 @@ public class OutgoingReceiver extends BroadcastReceiver {
                 Log.d("Outgoing Numbers", mBuilder.toString());
 
             }
-            setuponetimeworkManager("From OutGoing Call");
+            setuponetimeworkManager(context,"From OutGoing Call");
         }
     }
 }

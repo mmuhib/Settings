@@ -79,14 +79,40 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/BaterryinOther" />
+
     <Button
-        android:id="@+id/CheckAutoStart"
+        android:id="@+id/AppUsage"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:text="Zoom Data"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/BaterryinMi" />
+    <Button
+        android:id="@+id/CheckStart"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:text="Start"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/AppUsage" />
+    <Button
+        android:id="@+id/CheckStop"
         android:layout_width="250dp"
         android:layout_height="wrap_content"
         android:text="Stop"
       app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/BaterryinMi" />
+        app:layout_constraintTop_toBottomOf="@+id/CheckStart" />
+    <Button
+        android:visibility="gone"
+        android:id="@+id/CheckAutoStart"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:text="Auto Start"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/CheckStop" />
     <Button
         android:id="@+id/SynData"
         android:layout_width="250dp"

